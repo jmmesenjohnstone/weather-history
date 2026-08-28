@@ -2,33 +2,40 @@ name: Update Historical Weather
 
 on:
   schedule:
-    # Runs every day at 1:30 AM Central Time
+    # Runs every day at 6:30 AM UTC
+    # This is 1:30 AM Central Standard Time
     - cron: "30 6 * * *"
+
   workflow_dispatch:
 
 permissions:
   contents: write
 
+
 jobs:
+
   update-history:
 
     runs-on: ubuntu-latest
 
+
     steps:
 
-      # ---------------------------------------------------
-      # Get the repository
-      # ---------------------------------------------------
+      # =====================================================
+      # CHECK OUT REPOSITORY
+      # =====================================================
 
       - name: Check out repository
+
         uses: actions/checkout@v4
 
 
-      # ---------------------------------------------------
-      # Generate historical weather data
-      # ---------------------------------------------------
+      # =====================================================
+      # GENERATE HISTORICAL WEATHER DATA
+      # =====================================================
 
       - name: Generate historical weather
+
         env:
           VC_API_KEY: ${{ secrets.VC_API_KEY }}
 
@@ -75,7 +82,7 @@ jobs:
 
           today = date.today()
 
-          # Always compare completed days.
+          # We only use completed days.
           yesterday = today - timedelta(days=1)
 
           current_year = yesterday.year
@@ -84,10 +91,8 @@ jobs:
 
 
           # =================================================
-          # DATE RANGES
+          # YEAR-TO-DATE DATES
           # =================================================
-
-          # Current YTD
 
           current_ytd_start = date(
               current_year,
@@ -97,8 +102,6 @@ jobs:
 
           current_ytd_end = yesterday
 
-
-          # Previous YTD
 
           previous_ytd_start = date(
               previous_year,
@@ -113,7 +116,9 @@ jobs:
           )
 
 
-          # Current month-to-date
+          # =================================================
+          # MONTH-TO-DATE DATES
+          # =================================================
 
           current_mtd_start = date(
               current_year,
@@ -123,8 +128,6 @@ jobs:
 
           current_mtd_end = yesterday
 
-
-          # Previous-year same period
 
           previous_mtd_start = date(
               previous_year,
@@ -140,16 +143,22 @@ jobs:
 
 
           # =================================================
-          # VISUAL CROSSING REQUEST
+          # GET WEATHER FROM VISUAL CROSSING
           # =================================================
 
-          def get_weather(zip_code, start_date, end_date):
+          def get_weather(
+              zip_code,
+              start_date,
+              end_date
+          ):
 
               url = (
                   "https://weather.visualcrossing.com/"
                   "VisualCrossingWebServices/rest/services/"
                   "timeline/"
-                  f"{zip_code}/{start_date}/{end_date}"
+                  f"{zip_code}/"
+                  f"{start_date}/"
+                  f"{end_date}"
                   "?unitGroup=us"
                   "&include=days"
                   "&elements="
@@ -160,7 +169,7 @@ jobs:
 
 
               print(
-                  f"Getting {zip_code}: "
+                  f"Getting weather for {zip_code}: "
                   f"{start_date} through {end_date}"
               )
 
@@ -182,14 +191,12 @@ jobs:
               ) as response:
 
                   return json.loads(
-                      response
-                      .read()
-                      .decode()
+                      response.read().decode()
                   )
 
 
           # =================================================
-          # CALCULATE STATISTICS
+          # CALCULATE WEATHER STATISTICS
           # =================================================
 
           def calculate(data):
@@ -286,8 +293,11 @@ jobs:
 
 
           # =================================================
-          # OUTPUT STRUCTURE
+          # CREATE OUTPUT STRUCTURE
           # =================================================
+
+          month_name = yesterday.strftime("%B")
+
 
           output = {
 
@@ -311,16 +321,10 @@ jobs:
               "mtd": {
 
                   "currentLabel":
-                      yesterday.strftime(
-                          "%B %Y"
-                      ),
+                      f"{month_name} {current_year}",
 
                   "previousLabel":
-                      yesterday.strftime(
-                          "%B "
-                      )
-                      +
-                      str(previous_year),
+                      f"{month_name} {previous_year}",
 
                   "locations": {}
 
@@ -330,17 +334,15 @@ jobs:
 
 
           # =================================================
-          # PROCESS EACH ZIP CODE
+          # PROCESS ALL THREE LOCATIONS
           # =================================================
 
           for zip_code, location in LOCATIONS.items():
 
-              print(
-                  ""
-              )
 
+              print("")
               print(
-                  "================================="
+                  "========================================"
               )
 
               print(
@@ -351,12 +353,12 @@ jobs:
               )
 
               print(
-                  "================================="
+                  "========================================"
               )
 
 
               # ---------------------------------------------
-              # Current YTD
+              # CURRENT YTD
               # ---------------------------------------------
 
               current_ytd_data = get_weather(
@@ -371,7 +373,7 @@ jobs:
 
 
               # ---------------------------------------------
-              # Previous YTD
+              # PREVIOUS YTD
               # ---------------------------------------------
 
               previous_ytd_data = get_weather(
@@ -386,7 +388,7 @@ jobs:
 
 
               # ---------------------------------------------
-              # Current Month
+              # CURRENT MONTH
               # ---------------------------------------------
 
               current_mtd_data = get_weather(
@@ -401,7 +403,7 @@ jobs:
 
 
               # ---------------------------------------------
-              # Previous Month
+              # PREVIOUS MONTH
               # ---------------------------------------------
 
               previous_mtd_data = get_weather(
@@ -416,35 +418,20 @@ jobs:
 
 
               # ---------------------------------------------
-              # Calculate
+              # CALCULATE RESULTS
               # ---------------------------------------------
 
-              current_ytd =
-                  calculate(
-                      current_ytd_data
-                  )
+              current_ytd = calculate(current_ytd_data)
 
+              previous_ytd = calculate(previous_ytd_data)
 
-              previous_ytd =
-                  calculate(
-                      previous_ytd_data
-                  )
+              current_mtd = calculate(current_mtd_data)
 
-
-              current_mtd =
-                  calculate(
-                      current_mtd_data
-                  )
-
-
-              previous_mtd =
-                  calculate(
-                      previous_mtd_data
-                  )
+              previous_mtd = calculate(previous_mtd_data)
 
 
               # ---------------------------------------------
-              # Store YTD
+              # SAVE YTD RESULTS
               # ---------------------------------------------
 
               output["ytd"]["locations"][
@@ -467,7 +454,7 @@ jobs:
 
 
               # ---------------------------------------------
-              # Store MTD
+              # SAVE MONTHLY RESULTS
               # ---------------------------------------------
 
               output["mtd"]["locations"][
@@ -490,7 +477,7 @@ jobs:
 
 
           # =================================================
-          # WRITE JSON FILE
+          # WRITE HISTORY.JSON
           # =================================================
 
           with open(
@@ -506,16 +493,25 @@ jobs:
 
 
           print("")
-          print("=================================")
-          print("Historical weather data created.")
-          print("=================================")
+          print(
+              "========================================"
+          )
+
+          print(
+              "Historical weather data created "
+              "successfully."
+          )
+
+          print(
+              "========================================"
+          )
 
           PY
 
 
-      # ---------------------------------------------------
-      # Save history.json
-      # ---------------------------------------------------
+      # =====================================================
+      # COMMIT UPDATED HISTORY.JSON
+      # =====================================================
 
       - name: Commit updated history
 
