@@ -1,11 +1,9 @@
 name: Update Historical Weather
 
 on:
-  schedule:
-    # Runs every day at 6:30 AM UTC
-    # This is 1:30 AM Central Standard Time
-    - cron: "30 6 * * *"
-
+  # Automatic daily schedule is temporarily disabled.
+  # The workflow can only be started manually until
+  # the Visual Crossing API issue is resolved.
   workflow_dispatch:
 
 permissions:
