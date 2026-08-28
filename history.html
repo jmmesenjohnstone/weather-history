@@ -7,6 +7,7 @@
 <title>Weather History Comparison</title>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
@@ -20,8 +21,13 @@ body {
 
 .weather-card {
     width: 100%;
-    padding: 14px 18px;
+    padding: 14px 16px;
 }
+
+
+/* =========================
+   HEADER
+   ========================= */
 
 .header {
     display: flex;
@@ -34,6 +40,7 @@ body {
     font-size: 19px;
     font-weight: 700;
     color: #1f4e79;
+    letter-spacing: .2px;
 }
 
 .subtitle {
@@ -48,10 +55,13 @@ body {
     text-align: right;
 }
 
-/* ---------- SECTIONS ---------- */
+
+/* =========================
+   SECTION
+   ========================= */
 
 .section {
-    margin-bottom: 13px;
+    margin-bottom: 14px;
 }
 
 .section-title {
@@ -59,48 +69,109 @@ body {
     color: white;
     font-size: 12px;
     font-weight: 700;
-    padding: 6px 9px;
+    padding: 7px 9px;
     border-radius: 5px 5px 0 0;
 }
 
+
+/* =========================
+   LOCATION HEADERS
+   ========================= */
+
 .comparison {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+
+    /*
+       First column = metric
+       Next 3 columns = locations
+    */
+
+    grid-template-columns:
+        1.25fr
+        1fr
+        1fr
+        1fr;
+
     border: 1px solid #e1e7eb;
     border-top: none;
 }
 
 .cell {
-    padding: 6px 7px;
-    font-size: 11px;
+    padding: 6px 6px;
+    font-size: 10px;
+
     border-right: 1px solid #e1e7eb;
     border-bottom: 1px solid #e1e7eb;
+
+    min-width: 0;
 }
 
 .cell:nth-child(4n) {
     border-right: none;
 }
 
-.metric {
-    font-weight: 600;
-    color: #405463;
-}
 
-.year {
+/* =========================
+   LOCATION HEADER
+   ========================= */
+
+.location-header {
+    background: #f1f5f8;
     text-align: center;
     font-weight: 700;
     color: #34495e;
-    background: #f4f7f9;
+    font-size: 10px;
+    line-height: 13px;
 }
+
+.location-header span {
+    display: block;
+    font-size: 8px;
+    font-weight: 400;
+    color: #81909b;
+}
+
+
+/* =========================
+   METRICS
+   ========================= */
+
+.metric {
+    font-weight: 600;
+    color: #405463;
+    background: #fafbfc;
+}
+
+
+/* =========================
+   VALUES
+   ========================= */
 
 .value {
     text-align: center;
     font-weight: 600;
+    color: #243447;
 }
+
+.current {
+    font-size: 11px;
+}
+
+.previous {
+    font-size: 9px;
+    color: #87949d;
+    margin-top: 2px;
+}
+
+
+/* =========================
+   CHANGE
+   ========================= */
 
 .change {
     text-align: center;
     font-weight: 700;
+    margin-top: 2px;
 }
 
 .positive {
@@ -115,15 +186,39 @@ body {
     color: #7f8c8d;
 }
 
+
+/* =========================
+   DATA CELL
+   ========================= */
+
+.data-cell {
+    text-align: center;
+    padding: 5px 3px;
+}
+
+
+/* =========================
+   LOADING / ERROR
+   ========================= */
+
+.loading {
+    padding: 25px;
+    text-align: center;
+    color: #71808c;
+}
+
 .error {
     padding: 20px;
     text-align: center;
     color: #b03a2e;
 }
 
-/* ---------- SMALL SCREENS ---------- */
 
-@media (max-width: 650px) {
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 700px) {
 
     .weather-card {
         padding: 10px;
@@ -134,179 +229,396 @@ body {
     }
 
     .comparison {
-        grid-template-columns: 1.4fr 1fr 1fr 1fr;
+        grid-template-columns:
+            1.15fr
+            1fr
+            1fr
+            1fr;
     }
 
     .cell {
-        padding: 5px 4px;
-        font-size: 10px;
+        padding: 5px 3px;
+        font-size: 9px;
+    }
+
+    .location-header {
+        font-size: 9px;
+    }
+
+    .location-header span {
+        font-size: 7px;
     }
 
     .updated {
         display: none;
     }
 }
+
 </style>
 </head>
 
+
 <body>
 
+
 <div class="weather-card">
+
+
+    <!-- =========================
+         HEADER
+         ========================= -->
 
     <div class="header">
 
         <div>
+
             <div class="title">
                 WEATHER COMPARISON
             </div>
 
             <div class="subtitle">
-                Earth City, MO 63045
+                Historical Weather — Three Locations
             </div>
+
         </div>
 
-        <div class="updated" id="updated">
+        <div
+            class="updated"
+            id="updated">
             Loading...
         </div>
 
     </div>
 
 
-    <!-- YEAR TO DATE -->
+
+    <!-- =====================================================
+         YEAR TO DATE
+         ===================================================== -->
 
     <div class="section">
 
-        <div class="section-title" id="ytd-title">
+        <div
+            class="section-title"
+            id="ytd-title">
+
             THIS YEAR vs. LAST YEAR
+
         </div>
 
-        <div class="comparison">
 
-            <div class="cell year">Metric</div>
-            <div class="cell year" id="ytd-current-year">This Year</div>
-            <div class="cell year" id="ytd-last-year">Last Year</div>
-            <div class="cell year">Change</div>
+        <div
+            class="comparison"
+            id="ytd-table">
 
+
+            <!-- HEADER ROW -->
+
+            <div class="cell location-header">
+                Metric
+            </div>
+
+
+            <div class="cell location-header">
+                Earth City
+                <span>MO • 63045</span>
+            </div>
+
+
+            <div class="cell location-header">
+                Columbia
+                <span>MO • 65202</span>
+            </div>
+
+
+            <div class="cell location-header">
+                Paducah
+                <span>KY • 42003</span>
+            </div>
+
+
+
+            <!-- AVG TEMP -->
 
             <div class="cell metric">
                 Average Temp
             </div>
 
-            <div class="cell value" id="ytd-avg-current">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-earth-avg">
+                --
+            </div>
 
-            <div class="cell value" id="ytd-avg-last">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-columbia-avg">
+                --
+            </div>
 
-            <div class="cell change" id="ytd-avg-change">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-paducah-avg">
+                --
+            </div>
 
+
+
+            <!-- HIGH TEMP -->
 
             <div class="cell metric">
                 Highest Temp
             </div>
 
-            <div class="cell value" id="ytd-high-current">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-earth-high">
+                --
+            </div>
 
-            <div class="cell value" id="ytd-high-last">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-columbia-high">
+                --
+            </div>
 
-            <div class="cell change" id="ytd-high-change">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-paducah-high">
+                --
+            </div>
 
+
+
+            <!-- LOW TEMP -->
 
             <div class="cell metric">
                 Lowest Temp
             </div>
 
-            <div class="cell value" id="ytd-low-current">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-earth-low">
+                --
+            </div>
 
-            <div class="cell value" id="ytd-low-last">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-columbia-low">
+                --
+            </div>
 
-            <div class="cell change" id="ytd-low-change">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-paducah-low">
+                --
+            </div>
 
+
+
+            <!-- RAINFALL -->
 
             <div class="cell metric">
                 Rainfall
             </div>
 
-            <div class="cell value" id="ytd-rain-current">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-earth-rain">
+                --
+            </div>
 
-            <div class="cell value" id="ytd-rain-last">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-columbia-rain">
+                --
+            </div>
 
-            <div class="cell change" id="ytd-rain-change">--</div>
+            <div
+                class="cell data-cell"
+                id="ytd-paducah-rain">
+                --
+            </div>
+
 
         </div>
 
     </div>
 
 
-    <!-- MONTH TO DATE -->
+
+    <!-- =====================================================
+         MONTH TO DATE
+         ===================================================== -->
 
     <div class="section">
 
-        <div class="section-title" id="mtd-title">
+        <div
+            class="section-title"
+            id="mtd-title">
+
             THIS MONTH vs. SAME MONTH LAST YEAR
+
         </div>
 
-        <div class="comparison">
 
-            <div class="cell year">Metric</div>
-            <div class="cell year" id="mtd-current-month">This Month</div>
-            <div class="cell year" id="mtd-last-month">Last Year</div>
-            <div class="cell year">Change</div>
+        <div
+            class="comparison"
+            id="mtd-table">
 
+
+            <!-- HEADER ROW -->
+
+            <div class="cell location-header">
+                Metric
+            </div>
+
+
+            <div class="cell location-header">
+                Earth City
+                <span>MO • 63045</span>
+            </div>
+
+
+            <div class="cell location-header">
+                Columbia
+                <span>MO • 65202</span>
+            </div>
+
+
+            <div class="cell location-header">
+                Paducah
+                <span>KY • 42003</span>
+            </div>
+
+
+
+            <!-- AVG TEMP -->
 
             <div class="cell metric">
                 Average Temp
             </div>
 
-            <div class="cell value" id="mtd-avg-current">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-earth-avg">
+                --
+            </div>
 
-            <div class="cell value" id="mtd-avg-last">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-columbia-avg">
+                --
+            </div>
 
-            <div class="cell change" id="mtd-avg-change">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-paducah-avg">
+                --
+            </div>
 
+
+
+            <!-- HIGH TEMP -->
 
             <div class="cell metric">
                 Highest Temp
             </div>
 
-            <div class="cell value" id="mtd-high-current">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-earth-high">
+                --
+            </div>
 
-            <div class="cell value" id="mtd-high-last">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-columbia-high">
+                --
+            </div>
 
-            <div class="cell change" id="mtd-high-change">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-paducah-high">
+                --
+            </div>
 
+
+
+            <!-- LOW TEMP -->
 
             <div class="cell metric">
                 Lowest Temp
             </div>
 
-            <div class="cell value" id="mtd-low-current">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-earth-low">
+                --
+            </div>
 
-            <div class="cell value" id="mtd-low-last">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-columbia-low">
+                --
+            </div>
 
-            <div class="cell change" id="mtd-low-change">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-paducah-low">
+                --
+            </div>
 
+
+
+            <!-- RAINFALL -->
 
             <div class="cell metric">
                 Rainfall
             </div>
 
-            <div class="cell value" id="mtd-rain-current">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-earth-rain">
+                --
+            </div>
 
-            <div class="cell value" id="mtd-rain-last">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-columbia-rain">
+                --
+            </div>
 
-            <div class="cell change" id="mtd-rain-change">--</div>
+            <div
+                class="cell data-cell"
+                id="mtd-paducah-rain">
+                --
+            </div>
+
 
         </div>
 
     </div>
+
 
 </div>
 
 
+
 <script>
+
+
+/* ==========================================================
+   FORMATTING FUNCTIONS
+   ========================================================== */
+
 
 function temperature(value) {
 
-    if (value === null || value === undefined) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
         return "--";
     }
 
@@ -316,7 +628,10 @@ function temperature(value) {
 
 function rainfall(value) {
 
-    if (value === null || value === undefined) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
         return "--";
     }
 
@@ -324,112 +639,165 @@ function rainfall(value) {
 }
 
 
-function difference(current, previous, unit) {
+/* ==========================================================
+   BUILD A VALUE CELL
+   ========================================================== */
+
+
+function valueCell(current, previous, type) {
 
     if (
         current === null ||
-        current === undefined ||
-        previous === null ||
-        previous === undefined
+        current === undefined
     ) {
         return "--";
     }
 
-    const diff = current - previous;
 
-    if (Math.abs(diff) < 0.05) {
-        return "—";
+    let currentText;
+
+    let previousText;
+
+
+    if (type === "temp") {
+
+        currentText =
+            temperature(current);
+
+        previousText =
+            temperature(previous);
+
     }
 
-    const sign = diff > 0 ? "+" : "";
+    else {
 
-    return sign + diff.toFixed(1) + unit;
-}
+        currentText =
+            rainfall(current);
 
+        previousText =
+            rainfall(previous);
 
-function setChange(id, current, previous, unit) {
-
-    const element = document.getElementById(id);
-
-    const diff = current - previous;
-
-    element.textContent =
-        difference(current, previous, unit);
-
-    element.className = "cell change";
-
-    if (Math.abs(diff) < 0.05) {
-
-        element.classList.add("neutral");
-
-    } else if (diff > 0) {
-
-        element.classList.add("positive");
-
-    } else {
-
-        element.classList.add("negative");
     }
+
+
+    let difference =
+        current - previous;
+
+
+    let differenceText;
+
+
+    if (
+        previous === null ||
+        previous === undefined
+    ) {
+
+        differenceText = "";
+
+    }
+
+    else if (
+        Math.abs(difference) < 0.05
+    ) {
+
+        differenceText =
+            `<div class="change neutral">—</div>`;
+
+    }
+
+    else {
+
+        const sign =
+            difference > 0 ? "+" : "";
+
+        const unit =
+            type === "temp"
+                ? "°"
+                : '"';
+
+        const className =
+            difference > 0
+                ? "positive"
+                : "negative";
+
+        differenceText =
+
+            `<div class="change ${className}">
+                ${sign}${difference.toFixed(1)}${unit}
+            </div>`;
+    }
+
+
+    return `
+
+        <div class="current">
+            ${currentText}
+        </div>
+
+        <div class="previous">
+            LY: ${previousText}
+        </div>
+
+        ${differenceText}
+
+    `;
 }
 
 
-function fillComparison(prefix, current, previous) {
-
-    document.getElementById(prefix + "-avg-current")
-        .textContent = temperature(current.avgTemp);
-
-    document.getElementById(prefix + "-avg-last")
-        .textContent = temperature(previous.avgTemp);
-
-    setChange(
-        prefix + "-avg-change",
-        current.avgTemp,
-        previous.avgTemp,
-        "°"
-    );
+/* ==========================================================
+   POPULATE LOCATION
+   ========================================================== */
 
 
-    document.getElementById(prefix + "-high-current")
-        .textContent = temperature(current.highTemp);
+function populateLocation(
+    prefix,
+    location
+) {
 
-    document.getElementById(prefix + "-high-last")
-        .textContent = temperature(previous.highTemp);
-
-    setChange(
-        prefix + "-high-change",
-        current.highTemp,
-        previous.highTemp,
-        "°"
-    );
-
-
-    document.getElementById(prefix + "-low-current")
-        .textContent = temperature(current.lowTemp);
-
-    document.getElementById(prefix + "-low-last")
-        .textContent = temperature(previous.lowTemp);
-
-    setChange(
-        prefix + "-low-change",
-        current.lowTemp,
-        previous.lowTemp,
-        "°"
-    );
+    document.getElementById(
+        prefix + "-avg"
+    ).innerHTML =
+        valueCell(
+            location.current.avgTemp,
+            location.previous.avgTemp,
+            "temp"
+        );
 
 
-    document.getElementById(prefix + "-rain-current")
-        .textContent = rainfall(current.rainfall);
+    document.getElementById(
+        prefix + "-high"
+    ).innerHTML =
+        valueCell(
+            location.current.highTemp,
+            location.previous.highTemp,
+            "temp"
+        );
 
-    document.getElementById(prefix + "-rain-last")
-        .textContent = rainfall(previous.rainfall);
 
-    setChange(
-        prefix + "-rain-change",
-        current.rainfall,
-        previous.rainfall,
-        '"'
-    );
+    document.getElementById(
+        prefix + "-low"
+    ).innerHTML =
+        valueCell(
+            location.current.lowTemp,
+            location.previous.lowTemp,
+            "temp"
+        );
+
+
+    document.getElementById(
+        prefix + "-rain"
+    ).innerHTML =
+        valueCell(
+            location.current.rainfall,
+            location.previous.rainfall,
+            "rain"
+        );
 }
+
+
+/* ==========================================================
+   LOAD HISTORY
+   ========================================================== */
 
 
 async function loadHistory() {
@@ -437,83 +805,146 @@ async function loadHistory() {
     try {
 
         const response =
-            await fetch("history.json?t=" + Date.now());
+            await fetch(
+                "history.json?t=" +
+                Date.now()
+            );
+
 
         if (!response.ok) {
-            throw new Error("Could not load history.json");
+
+            throw new Error(
+                "Could not load history.json"
+            );
         }
 
-        const data = await response.json();
+
+        const data =
+            await response.json();
 
 
-        /* YEAR TO DATE */
 
-        fillComparison(
-            "ytd",
-            data.ytd.current,
-            data.ytd.previous
-        );
-
-        document.getElementById("ytd-current-year")
-            .textContent = data.ytd.currentYear;
-
-        document.getElementById("ytd-last-year")
-            .textContent = data.ytd.previousYear;
+        /* ==================================================
+           YEAR TO DATE
+           ================================================== */
 
 
-        /* MONTH TO DATE */
+        document.getElementById(
+            "ytd-title"
+        ).textContent =
 
-        fillComparison(
-            "mtd",
-            data.mtd.current,
-            data.mtd.previous
-        );
-
-        document.getElementById("mtd-current-month")
-            .textContent = data.mtd.currentLabel;
-
-        document.getElementById("mtd-last-month")
-            .textContent = data.mtd.previousLabel;
-
-
-        document.getElementById("ytd-title")
-            .textContent =
             data.ytd.currentYear +
             " YTD vs. " +
             data.ytd.previousYear +
             " YTD";
 
 
-        document.getElementById("mtd-title")
-            .textContent =
+        populateLocation(
+            "ytd-earth",
+            data.ytd.locations["63045"]
+        );
+
+
+        populateLocation(
+            "ytd-columbia",
+            data.ytd.locations["65202"]
+        );
+
+
+        populateLocation(
+            "ytd-paducah",
+            data.ytd.locations["42003"]
+        );
+
+
+
+        /* ==================================================
+           MONTH TO DATE
+           ================================================== */
+
+
+        document.getElementById(
+            "mtd-title"
+        ).textContent =
+
             data.mtd.currentLabel +
             " vs. " +
             data.mtd.previousLabel;
 
 
-        document.getElementById("updated")
-            .textContent =
+        populateLocation(
+            "mtd-earth",
+            data.mtd.locations["63045"]
+        );
+
+
+        populateLocation(
+            "mtd-columbia",
+            data.mtd.locations["65202"]
+        );
+
+
+        populateLocation(
+            "mtd-paducah",
+            data.mtd.locations["42003"]
+        );
+
+
+
+        /* ==================================================
+           UPDATED TIME
+           ================================================== */
+
+
+        document.getElementById(
+            "updated"
+        ).textContent =
+
             "Updated " +
-            new Date().toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit"
-            });
+            new Date().toLocaleTimeString(
+                "en-US",
+                {
+                    hour: "numeric",
+                    minute: "2-digit"
+                }
+            );
 
     }
+
 
     catch (error) {
 
-        document.getElementById("updated")
-            .textContent = "Unable to load data";
-
         console.error(error);
+
+
+        document.getElementById(
+            "updated"
+        ).textContent =
+            "Unable to load data";
+
+
+        document.getElementById(
+            "ytd-table"
+        ).innerHTML =
+
+            `<div class="error">
+                Historical weather data unavailable
+            </div>`;
+
     }
+
 }
+
+
+/* ==========================================================
+   START
+   ========================================================== */
 
 
 loadHistory();
 
 </script>
+
 
 </body>
 </html>
