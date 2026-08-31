@@ -3,6 +3,7 @@
   "month": "August",
   "currentYear": 2026,
   "previousYear": 2025,
+  "daysIncluded": 30,
   "currentPeriod": "2026-08-01 through 2026-08-30",
   "previousPeriod": "2025-08-01 through 2025-08-30",
   "locations": {
@@ -20,6 +21,12 @@
         "highTemp": 96.6,
         "lowTemp": 52.6,
         "rainfall": 1.45
+      },
+      "change": {
+        "avgTemp": 1.7,
+        "highTemp": -1.1,
+        "lowTemp": 6.6,
+        "rainfall": 0.35
       }
     },
     "65202": {
@@ -36,6 +43,12 @@
         "highTemp": 96.4,
         "lowTemp": 49.2,
         "rainfall": 0.1
+      },
+      "change": {
+        "avgTemp": 2.0,
+        "highTemp": -1.5,
+        "lowTemp": 10.2,
+        "rainfall": 4.11
       }
     },
     "42003": {
@@ -52,6 +65,12 @@
         "highTemp": 97.3,
         "lowTemp": 49.5,
         "rainfall": 1.14
+      },
+      "change": {
+        "avgTemp": 2.0,
+        "highTemp": 0.8,
+        "lowTemp": 10.5,
+        "rainfall": 3.23
       }
     }
   }
