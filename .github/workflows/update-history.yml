@@ -1,15 +1,6 @@
 name: Update Monthly Historical Weather
 
 on:
-  # =====================================================
-  # AUTOMATIC DAILY RUN
-  # =====================================================
-  #
-  # 4:50 AM UTC = 11:50 PM Central during daylight
-  # saving time.
-  #
-  # Manual runs remain available.
-  #
   schedule:
     - cron: "50 4 * * *"
 
@@ -33,7 +24,7 @@ jobs:
 
 
       # =====================================================
-      # GENERATE WEATHER DATA
+      # GENERATE WEATHER DATA + GITHUB PAGES DASHBOARD
       # =====================================================
 
       - name: Update weather data
@@ -59,18 +50,17 @@ jobs:
           DAILY_FILE = "weather-daily.json"
           HISTORY_FILE = "history.json"
           README_FILE = "README.md"
+          HTML_FILE = "index.html"
 
           LOCATIONS = {
               "63045": {
                   "name": "Earth City",
                   "state": "MO"
               },
-
               "65202": {
                   "name": "Columbia",
                   "state": "MO"
               },
-
               "42003": {
                   "name": "Paducah",
                   "state": "KY"
@@ -83,40 +73,26 @@ jobs:
           # =================================================
 
           today = date.today()
-
-          # Only use completed days.
           yesterday = today - timedelta(days=1)
 
           current_year = yesterday.year
           previous_year = current_year - 1
           current_month = yesterday.month
+          completed_day = yesterday.day
 
           month_name = yesterday.strftime("%B")
 
-          completed_day = yesterday.day
-
 
           # =================================================
-          # HELPER: LAST DAY OF MONTH
+          # LAST DAY OF MONTH
           # =================================================
 
           def last_day_of_month(year, month):
 
               if month == 12:
-
-                  next_month = date(
-                      year + 1,
-                      1,
-                      1
-                  )
-
+                  next_month = date(year + 1, 1, 1)
               else:
-
-                  next_month = date(
-                      year,
-                      month + 1,
-                      1
-                  )
+                  next_month = date(year, month + 1, 1)
 
               return (
                   next_month - timedelta(days=1)
@@ -124,7 +100,7 @@ jobs:
 
 
           # =================================================
-          # COMPARISON DATES
+          # COMPARISON PERIODS
           # =================================================
 
           current_start = date(
@@ -134,7 +110,6 @@ jobs:
           )
 
           current_end = yesterday
-
 
           previous_start = date(
               previous_year,
@@ -191,7 +166,6 @@ jobs:
               if zip_code not in daily_data["locations"]:
 
                   daily_data["locations"][zip_code] = {
-
                       "name":
                           LOCATIONS[zip_code]["name"],
 
@@ -199,7 +173,6 @@ jobs:
                           LOCATIONS[zip_code]["state"],
 
                       "days": {}
-
                   }
 
               elif "days" not in daily_data[
@@ -212,7 +185,7 @@ jobs:
 
 
           # =================================================
-          # VISUAL CROSSING REQUEST
+          # VISUAL CROSSING
           # =================================================
 
           total_query_cost = 0
@@ -225,7 +198,6 @@ jobs:
           ):
 
               global total_query_cost
-
 
               url = (
                   "https://weather.visualcrossing.com/"
@@ -241,7 +213,6 @@ jobs:
                   f"&key={API_KEY}"
                   "&contentType=json"
               )
-
 
               print("")
               print(
@@ -260,7 +231,6 @@ jobs:
                   flush=True
               )
 
-
               request = urllib.request.Request(
                   url,
                   headers={
@@ -268,7 +238,6 @@ jobs:
                           "GitHub-Actions-Monthly-Weather/1.0"
                   }
               )
-
 
               try:
 
@@ -280,7 +249,6 @@ jobs:
                       data = json.loads(
                           response.read().decode()
                       )
-
 
               except urllib.error.HTTPError as error:
 
@@ -296,7 +264,6 @@ jobs:
                       error_body = (
                           "Unable to read error response."
                       )
-
 
                   print("")
                   print(
@@ -344,18 +311,16 @@ jobs:
 
               total_query_cost += query_cost
 
-
               print(
                   f"  Query cost: {query_cost}",
                   flush=True
               )
 
-
               return data
 
 
           # =================================================
-          # STORE DAILY RECORDS
+          # STORE DAYS
           # =================================================
 
           def store_days(
@@ -363,23 +328,14 @@ jobs:
               data
           ):
 
-              days = data.get(
-                  "days",
-                  []
-              )
-
-
-              for day in days:
+              for day in data.get("days", []):
 
                   weather_date = day.get(
                       "datetime"
                   )
 
-
                   if not weather_date:
-
                       continue
-
 
                   daily_data[
                       "locations"
@@ -399,8 +355,10 @@ jobs:
                           day.get("tempmin"),
 
                       "precip":
-                          day.get("precip", 0) or 0
-
+                          day.get(
+                              "precip",
+                              0
+                          ) or 0
                   }
 
 
@@ -422,34 +380,24 @@ jobs:
                   "days"
               ]
 
-
               missing = []
 
               current = start_date
 
-
               while current <= end_date:
 
-                  date_string = str(current)
-
-
-                  if date_string not in existing:
+                  if str(current) not in existing:
 
                       missing.append(current)
 
-
                   current += timedelta(days=1)
-
 
               return missing
 
 
           # =================================================
-          # FETCH MISSING DATA
+          # DOWNLOAD ONLY MISSING DAYS
           # =================================================
-
-          # Seven-day batches keep the initial bootstrap
-          # controlled and make API usage easy to monitor.
 
           BATCH_SIZE = 7
 
@@ -474,20 +422,17 @@ jobs:
                   flush=True
               )
 
-
               current_missing = missing_dates(
                   zip_code,
                   current_start,
                   current_end
               )
 
-
               previous_missing = missing_dates(
                   zip_code,
                   previous_start,
                   previous_end
               )
-
 
               print(
                   f"Missing current-year days: "
@@ -502,9 +447,7 @@ jobs:
               )
 
 
-              # ---------------------------------------------
-              # CURRENT YEAR
-              # ---------------------------------------------
+              # Current year
 
               for i in range(
                   0,
@@ -516,13 +459,11 @@ jobs:
                       i:i + BATCH_SIZE
                   ]
 
-
                   data = get_weather(
                       zip_code,
                       batch[0],
                       batch[-1]
                   )
-
 
                   store_days(
                       zip_code,
@@ -530,9 +471,7 @@ jobs:
                   )
 
 
-              # ---------------------------------------------
-              # PREVIOUS YEAR
-              # ---------------------------------------------
+              # Previous year
 
               for i in range(
                   0,
@@ -544,13 +483,11 @@ jobs:
                       i:i + BATCH_SIZE
                   ]
 
-
                   data = get_weather(
                       zip_code,
                       batch[0],
                       batch[-1]
                   )
-
 
                   store_days(
                       zip_code,
@@ -576,20 +513,17 @@ jobs:
                   "days"
               ]
 
-
               temperatures = []
               highs = []
               lows = []
+
               rainfall = 0
 
-
               current = start_date
-
 
               while current <= end_date:
 
                   date_string = str(current)
-
 
                   if date_string not in days:
 
@@ -599,36 +533,27 @@ jobs:
                           f"{date_string}."
                       )
 
-
                   day = days[date_string]
 
-
                   if day.get("temp") is not None:
-
                       temperatures.append(
                           day["temp"]
                       )
 
-
                   if day.get("tempmax") is not None:
-
                       highs.append(
                           day["tempmax"]
                       )
 
-
                   if day.get("tempmin") is not None:
-
                       lows.append(
                           day["tempmin"]
                       )
-
 
                   rainfall += (
                       day.get("precip", 0)
                       or 0
                   )
-
 
                   current += timedelta(days=1)
 
@@ -640,34 +565,24 @@ jobs:
                           sum(temperatures)
                           / len(temperatures),
                           1
-                      )
-                      if temperatures
-                      else None,
-
+                      ),
 
                   "highTemp":
-                      max(highs)
-                      if highs
-                      else None,
-
+                      max(highs),
 
                   "lowTemp":
-                      min(lows)
-                      if lows
-                      else None,
-
+                      min(lows),
 
                   "rainfall":
                       round(
                           rainfall,
                           2
                       )
-
               }
 
 
           # =================================================
-          # CALCULATE LOCATION RESULTS
+          # CALCULATE RESULTS
           # =================================================
 
           results = {}
@@ -681,13 +596,11 @@ jobs:
                   current_end
               )
 
-
               previous_stats = calculate(
                   zip_code,
                   previous_start,
                   previous_end
               )
-
 
               results[zip_code] = {
 
@@ -708,38 +621,40 @@ jobs:
                       "avgTemp":
                           round(
                               current_stats["avgTemp"]
-                              - previous_stats["avgTemp"],
+                              -
+                              previous_stats["avgTemp"],
                               1
                           ),
 
                       "highTemp":
                           round(
                               current_stats["highTemp"]
-                              - previous_stats["highTemp"],
+                              -
+                              previous_stats["highTemp"],
                               1
                           ),
 
                       "lowTemp":
                           round(
                               current_stats["lowTemp"]
-                              - previous_stats["lowTemp"],
+                              -
+                              previous_stats["lowTemp"],
                               1
                           ),
 
                       "rainfall":
                           round(
                               current_stats["rainfall"]
-                              - previous_stats["rainfall"],
+                              -
+                              previous_stats["rainfall"],
                               2
                           )
-
                   }
-
               }
 
 
           # =================================================
-          # PHOCAS HISTORY.JSON
+          # CREATE PHOCAS HISTORY.JSON
           # =================================================
 
           output = {
@@ -797,7 +712,6 @@ jobs:
                               ]["avgTemp"]
                           for zip_code in LOCATIONS
                       }
-
                   },
 
                   {
@@ -830,7 +744,6 @@ jobs:
                               ]["highTemp"]
                           for zip_code in LOCATIONS
                       }
-
                   },
 
                   {
@@ -863,7 +776,6 @@ jobs:
                               ]["lowTemp"]
                           for zip_code in LOCATIONS
                       }
-
                   },
 
                   {
@@ -896,9 +808,7 @@ jobs:
                               ]["rainfall"]
                           for zip_code in LOCATIONS
                       }
-
                   }
-
               ],
 
               "locations": [
@@ -912,279 +822,792 @@ jobs:
 
                       "state":
                           LOCATIONS[zip_code]["state"]
-
                   }
 
                   for zip_code in LOCATIONS
-
               ]
-
           }
 
 
           # =================================================
-          # HELPER: FORMAT CHANGE
+          # FORMAT CHANGE VALUES
           # =================================================
 
-          def format_change(
+          def change_html(
               value,
               unit="°"
           ):
 
-              if value is None:
-
-                  return "—"
-
-
               if value > 0:
 
-                  return f"🟢 +{value}{unit}"
-
+                  return (
+                      '<span class="positive">'
+                      f'+{value}{unit}'
+                      '</span>'
+                  )
 
               if value < 0:
 
-                  return f"🔵 −{abs(value)}{unit}"
+                  return (
+                      '<span class="negative">'
+                      f'−{abs(value)}{unit}'
+                      '</span>'
+                  )
+
+              return (
+                  '<span class="neutral">'
+                  f'0.0{unit}'
+                  '</span>'
+              )
 
 
-              return f"⚪ 0.0{unit}"
-
-
-          # =================================================
-          # HELPER: FORMAT RAINFALL CHANGE
-          # =================================================
-
-          def format_rain_change(
-              value
-          ):
-
-              if value is None:
-
-                  return "—"
-
+          def rain_change_html(value):
 
               if value > 0:
 
-                  return f"🟢 +{value:.2f}\""
-
+                  return (
+                      '<span class="positive">'
+                      f'+{value:.2f}"'
+                      '</span>'
+                  )
 
               if value < 0:
 
-                  return f"🔵 −{abs(value):.2f}\""
+                  return (
+                      '<span class="negative">'
+                      f'−{abs(value):.2f}"'
+                      '</span>'
+                  )
 
-
-              return '⚪ 0.00"'
+              return (
+                  '<span class="neutral">'
+                  '0.00"'
+                  '</span>'
+              )
 
 
           # =================================================
-          # BUILD GITHUB README
+          # CREATE GITHUB PAGES HTML
           # =================================================
 
-          location_order = [
-              "63045",
-              "65202",
-              "42003"
-          ]
+          ec = results["63045"]
+          co = results["65202"]
+          pa = results["42003"]
 
 
-          readme = []
+          html = f"""<!DOCTYPE html>
+          <html lang="en">
+          <head>
 
+          <meta charset="UTF-8">
 
-          readme.append(
-              f"# 🌤️ {month_name} "
-              f"{current_year} Weather Comparison"
-          )
+          <meta name="viewport"
+                content="width=device-width, initial-scale=1.0">
 
+          <title>
+          {month_name} {current_year} Weather Comparison
+          </title>
 
-          readme.append("")
+          <style>
 
+          * {{
+              box-sizing: border-box;
+          }}
 
-          readme.append(
-              f"### {month_name} {current_year} "
-              f"vs. {month_name} {previous_year}"
-          )
+          body {{
+              margin: 0;
+              font-family:
+                  -apple-system,
+                  BlinkMacSystemFont,
+                  "Segoe UI",
+                  Roboto,
+                  Helvetica,
+                  Arial,
+                  sans-serif;
 
+              color: #172033;
 
-          readme.append("")
+              background:
+                  linear-gradient(
+                      135deg,
+                      #eaf6ff 0%,
+                      #f8fbff 45%,
+                      #eef8f2 100%
+                  );
 
+              min-height: 100vh;
+          }}
 
-          readme.append(
-              f"Weather through **{yesterday.strftime('%B %-d, %Y')}** "
-              f"for our three locations."
-          )
 
+          .page {{
+              max-width: 1100px;
+              margin: 0 auto;
+              padding: 35px 20px 50px;
+          }}
 
-          readme.append("")
 
+          .hero {{
+              position: relative;
+              overflow: hidden;
 
-          # -------------------------------------------------
-          # LOCATION HEADER
-          # -------------------------------------------------
+              padding: 42px 38px;
 
-          readme.append(
-              "| | **Earth City** | **Columbia** | **Paducah** |"
-          )
+              border-radius: 26px;
 
-          readme.append(
-              "|---|---:|---:|---:|"
-          )
+              color: white;
 
+              background:
+                  linear-gradient(
+                      135deg,
+                      #1677c8,
+                      #35a9e8 55%,
+                      #66c7b0
+                  );
 
-          # -------------------------------------------------
-          # AVERAGE TEMPERATURE
-          # -------------------------------------------------
+              box-shadow:
+                  0 18px 45px
+                  rgba(24, 91, 140, 0.20);
 
-          readme.append(
-              "| 🌡️ **Average Temperature** | "
-              f"**{results['63045']['current']['avgTemp']}°** | "
-              f"**{results['65202']['current']['avgTemp']}°** | "
-              f"**{results['42003']['current']['avgTemp']}°** |"
-          )
+              margin-bottom: 28px;
+          }}
 
 
-          readme.append(
-              "| ↳ vs. Last Year | "
-              f"{format_change(results['63045']['change']['avgTemp'])} | "
-              f"{format_change(results['65202']['change']['avgTemp'])} | "
-              f"{format_change(results['42003']['change']['avgTemp'])} |"
-          )
+          .hero::after {{
+              content: "☀️";
 
+              position: absolute;
 
-          # -------------------------------------------------
-          # HIGH TEMPERATURE
-          # -------------------------------------------------
+              right: 35px;
+              top: 20px;
 
-          readme.append(
-              "| 🔥 **High Temperature** | "
-              f"**{results['63045']['current']['highTemp']}°** | "
-              f"**{results['65202']['current']['highTemp']}°** | "
-              f"**{results['42003']['current']['highTemp']}°** |"
-          )
+              font-size: 100px;
 
+              opacity: 0.18;
+          }}
 
-          readme.append(
-              "| ↳ vs. Last Year | "
-              f"{format_change(results['63045']['change']['highTemp'])} | "
-              f"{format_change(results['65202']['change']['highTemp'])} | "
-              f"{format_change(results['42003']['change']['highTemp'])} |"
-          )
 
+          .eyebrow {{
+              font-size: 13px;
+              font-weight: 700;
+              letter-spacing: 2px;
+              text-transform: uppercase;
+              opacity: 0.85;
+              margin-bottom: 8px;
+          }}
 
-          # -------------------------------------------------
-          # LOW TEMPERATURE
-          # -------------------------------------------------
 
-          readme.append(
-              "| ❄️ **Low Temperature** | "
-              f"**{results['63045']['current']['lowTemp']}°** | "
-              f"**{results['65202']['current']['lowTemp']}°** | "
-              f"**{results['42003']['current']['lowTemp']}°** |"
-          )
+          h1 {{
+              margin: 0;
 
+              font-size:
+                  clamp(30px, 5vw, 48px);
 
-          readme.append(
-              "| ↳ vs. Last Year | "
-              f"{format_change(results['63045']['change']['lowTemp'])} | "
-              f"{format_change(results['65202']['change']['lowTemp'])} | "
-              f"{format_change(results['42003']['change']['lowTemp'])} |"
-          )
+              line-height: 1.05;
+          }}
 
 
-          # -------------------------------------------------
-          # RAINFALL
-          # -------------------------------------------------
+          .subtitle {{
+              margin-top: 14px;
 
-          readme.append(
-              '| 🌧️ **Rainfall** | '
-              f"**{results['63045']['current']['rainfall']:.2f}\"** | "
-              f"**{results['65202']['current']['rainfall']:.2f}\"** | "
-              f"**{results['42003']['current']['rainfall']:.2f}\"** |"
-          )
+              font-size: 18px;
 
+              opacity: 0.92;
+          }}
 
-          readme.append(
-              "| ↳ vs. Last Year | "
-              f"{format_rain_change(results['63045']['change']['rainfall'])} | "
-              f"{format_rain_change(results['65202']['change']['rainfall'])} | "
-              f"{format_rain_change(results['42003']['change']['rainfall'])} |"
-          )
 
+          .period {{
+              display: inline-block;
 
-          readme.append("")
+              margin-top: 18px;
 
+              padding: 8px 13px;
 
-          # -------------------------------------------------
-          # LEGEND
-          # -------------------------------------------------
+              border-radius: 999px;
 
-          readme.append(
-              "### 📊 How to read the comparison"
-          )
+              background:
+                  rgba(255,255,255,0.17);
 
+              font-size: 13px;
+          }}
 
-          readme.append("")
 
+          .card {{
+              background: white;
 
-          readme.append(
-              "- 🟢 **Positive** = higher/more than last year"
-          )
+              border-radius: 22px;
 
-          readme.append(
-              "- 🔵 **Negative** = lower/less than last year"
-          )
+              overflow: hidden;
 
-          readme.append(
-              '- ⚪ **No change** = same as last year'
-          )
+              box-shadow:
+                  0 12px 35px
+                  rgba(31, 66, 92, 0.10);
 
+              margin-bottom: 24px;
+          }}
 
-          readme.append("")
 
+          .table-wrap {{
+              overflow-x: auto;
+          }}
 
-          # -------------------------------------------------
-          # PERIOD INFORMATION
-          # -------------------------------------------------
 
-          readme.append(
-              "### 📅 Reporting Period"
-          )
+          table {{
+              width: 100%;
 
+              border-collapse: collapse;
 
-          readme.append("")
+              min-width: 760px;
+          }}
 
 
-          readme.append(
-              f"- **Current:** "
-              f"{current_start} through {current_end}"
-          )
+          th {{
+              padding: 22px 20px;
 
-          readme.append(
-              f"- **Previous:** "
-              f"{previous_start} through {previous_end}"
-          )
+              background: #f4f8fc;
 
+              color: #27445c;
 
-          readme.append("")
+              font-size: 15px;
 
+              text-align: center;
 
-          readme.append(
-              "---"
-          )
+              border-bottom:
+                  1px solid #e4edf4;
+          }}
 
 
-          readme.append("")
+          th:first-child {{
+              text-align: left;
+              width: 31%;
+          }}
 
 
-          readme.append(
-              "*Weather data is automatically updated daily.*"
-          )
+          td {{
+              padding: 20px;
 
+              border-bottom:
+                  1px solid #edf2f6;
 
-          readme.append(
-              "*Source: Visual Crossing Weather Data.*"
-          )
+              text-align: center;
 
+              font-size: 17px;
+          }}
 
-          readme_text = "\n".join(readme) + "\n"
+
+          td:first-child {{
+              text-align: left;
+
+              color: #31475a;
+
+              font-weight: 600;
+          }}
+
+
+          tr:last-child td {{
+              border-bottom: none;
+          }}
+
+
+          .location {{
+              display: block;
+
+              font-size: 18px;
+
+              color: #173d59;
+          }}
+
+
+          .state {{
+              display: block;
+
+              margin-top: 3px;
+
+              font-size: 12px;
+
+              font-weight: 500;
+
+              color: #7890a2;
+          }}
+
+
+          .metric {{
+              font-size: 16px;
+          }}
+
+
+          .value {{
+              font-size: 25px;
+
+              font-weight: 750;
+
+              color: #142d40;
+          }}
+
+
+          .comparison td {{
+              padding-top: 7px;
+
+              padding-bottom: 17px;
+
+              background: #fbfdff;
+
+              font-size: 14px;
+          }}
+
+
+          .comparison td:first-child {{
+              color: #728697;
+
+              font-weight: 600;
+          }}
+
+
+          .positive {{
+              color: #17834b;
+
+              font-weight: 750;
+          }}
+
+
+          .negative {{
+              color: #2670b8;
+
+              font-weight: 750;
+          }}
+
+
+          .neutral {{
+              color: #758493;
+
+              font-weight: 700;
+          }}
+
+
+          .legend {{
+              display: flex;
+
+              flex-wrap: wrap;
+
+              gap: 18px;
+
+              padding: 20px 24px;
+
+              font-size: 13px;
+
+              color: #637789;
+          }}
+
+
+          .legend span {{
+              display: inline-flex;
+
+              align-items: center;
+
+              gap: 7px;
+          }}
+
+
+          .dot {{
+              width: 9px;
+              height: 9px;
+
+              border-radius: 50%;
+
+              display: inline-block;
+          }}
+
+
+          .green {{
+              background: #17834b;
+          }}
+
+
+          .blue {{
+              background: #2670b8;
+          }}
+
+
+          .gray {{
+              background: #758493;
+          }}
+
+
+          .footer {{
+              text-align: center;
+
+              color: #718494;
+
+              font-size: 12px;
+
+              margin-top: 25px;
+
+              line-height: 1.7;
+          }}
+
+
+          @media (max-width: 700px) {{
+
+              .page {{
+                  padding: 18px 12px 35px;
+              }}
+
+              .hero {{
+                  padding: 30px 24px;
+                  border-radius: 20px;
+              }}
+
+              .hero::after {{
+                  font-size: 70px;
+                  right: 15px;
+                  top: 15px;
+              }}
+
+              td, th {{
+                  padding-left: 14px;
+                  padding-right: 14px;
+              }}
+          }}
+
+          </style>
+
+          </head>
+
+          <body>
+
+          <main class="page">
+
+              <section class="hero">
+
+                  <div class="eyebrow">
+                      Weather at a Glance
+                  </div>
+
+                  <h1>
+                      {month_name} {current_year}
+                  </h1>
+
+                  <div class="subtitle">
+                      {month_name} {current_year}
+                      vs. {month_name} {previous_year}
+                  </div>
+
+                  <div class="period">
+                      Through {yesterday.strftime("%B %-d, %Y")}
+                  </div>
+
+              </section>
+
+
+              <section class="card">
+
+                  <div class="table-wrap">
+
+                      <table>
+
+                          <thead>
+
+                              <tr>
+
+                                  <th>
+                                      Weather Metric
+                                  </th>
+
+                                  <th>
+                                      <span class="location">
+                                          Earth City
+                                      </span>
+                                      <span class="state">
+                                          Missouri
+                                      </span>
+                                  </th>
+
+                                  <th>
+                                      <span class="location">
+                                          Columbia
+                                      </span>
+                                      <span class="state">
+                                          Missouri
+                                      </span>
+                                  </th>
+
+                                  <th>
+                                      <span class="location">
+                                          Paducah
+                                      </span>
+                                      <span class="state">
+                                          Kentucky
+                                      </span>
+                                  </th>
+
+                              </tr>
+
+                          </thead>
+
+                          <tbody>
+
+
+                              <tr>
+
+                                  <td class="metric">
+                                      🌡️ Average Temperature
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {ec["current"]["avgTemp"]}°
+                                      </span>
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {co["current"]["avgTemp"]}°
+                                      </span>
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {pa["current"]["avgTemp"]}°
+                                      </span>
+                                  </td>
+
+                              </tr>
+
+
+                              <tr class="comparison">
+
+                                  <td>
+                                      ↳ vs. Last Year
+                                  </td>
+
+                                  <td>
+                                      {change_html(
+                                          ec["change"]["avgTemp"]
+                                      )}
+                                  </td>
+
+                                  <td>
+                                      {change_html(
+                                          co["change"]["avgTemp"]
+                                      )}
+                                  </td>
+
+                                  <td>
+                                      {change_html(
+                                          pa["change"]["avgTemp"]
+                                      )}
+                                  </td>
+
+                              </tr>
+
+
+                              <tr>
+
+                                  <td class="metric">
+                                      🔥 High Temperature
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {ec["current"]["highTemp"]}°
+                                      </span>
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {co["current"]["highTemp"]}°
+                                      </span>
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {pa["current"]["highTemp"]}°
+                                      </span>
+                                  </td>
+
+                              </tr>
+
+
+                              <tr class="comparison">
+
+                                  <td>
+                                      ↳ vs. Last Year
+                                  </td>
+
+                                  <td>
+                                      {change_html(
+                                          ec["change"]["highTemp"]
+                                      )}
+                                  </td>
+
+                                  <td>
+                                      {change_html(
+                                          co["change"]["highTemp"]
+                                      )}
+                                  </td>
+
+                                  <td>
+                                      {change_html(
+                                          pa["change"]["highTemp"]
+                                      )}
+                                  </td>
+
+                              </tr>
+
+
+                              <tr>
+
+                                  <td class="metric">
+                                      ❄️ Low Temperature
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {ec["current"]["lowTemp"]}°
+                                      </span>
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {co["current"]["lowTemp"]}°
+                                      </span>
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {pa["current"]["lowTemp"]}°
+                                      </span>
+                                  </td>
+
+                              </tr>
+
+
+                              <tr class="comparison">
+
+                                  <td>
+                                      ↳ vs. Last Year
+                                  </td>
+
+                                  <td>
+                                      {change_html(
+                                          ec["change"]["lowTemp"]
+                                      )}
+                                  </td>
+
+                                  <td>
+                                      {change_html(
+                                          co["change"]["lowTemp"]
+                                      )}
+                                  </td>
+
+                                  <td>
+                                      {change_html(
+                                          pa["change"]["lowTemp"]
+                                      )}
+                                  </td>
+
+                              </tr>
+
+
+                              <tr>
+
+                                  <td class="metric">
+                                      🌧️ Rainfall
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {ec["current"]["rainfall"]:.2f}"
+                                      </span>
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {co["current"]["rainfall"]:.2f}"
+                                      </span>
+                                  </td>
+
+                                  <td>
+                                      <span class="value">
+                                          {pa["current"]["rainfall"]:.2f}"
+                                      </span>
+                                  </td>
+
+                              </tr>
+
+
+                              <tr class="comparison">
+
+                                  <td>
+                                      ↳ vs. Last Year
+                                  </td>
+
+                                  <td>
+                                      {rain_change_html(
+                                          ec["change"]["rainfall"]
+                                      )}
+                                  </td>
+
+                                  <td>
+                                      {rain_change_html(
+                                          co["change"]["rainfall"]
+                                      )}
+                                  </td>
+
+                                  <td>
+                                      {rain_change_html(
+                                          pa["change"]["rainfall"]
+                                      )}
+                                  </td>
+
+                              </tr>
+
+
+                          </tbody>
+
+                      </table>
+
+                  </div>
+
+
+                  <div class="legend">
+
+                      <span>
+                          <span class="dot green"></span>
+                          Higher / more than last year
+                      </span>
+
+                      <span>
+                          <span class="dot blue"></span>
+                          Lower / less than last year
+                      </span>
+
+                      <span>
+                          <span class="dot gray"></span>
+                          No change
+                      </span>
+
+                  </div>
+
+              </section>
+
+
+              <div class="footer">
+
+                  Data through
+                  {yesterday.strftime("%B %-d, %Y")}.
+                  <br>
+
+                  Automatically updated daily
+                  from Visual Crossing Weather Data.
+
+              </div>
+
+          </main>
+
+          </body>
+
+          </html>
+          """
 
 
           # =================================================
@@ -1215,13 +1638,61 @@ jobs:
               )
 
 
+          # =================================================
+          # CREATE README
+          # =================================================
+
+          readme = f"""# 🌤️ {month_name} {current_year} Weather Comparison
+
+          ### {month_name} {current_year} vs. {month_name} {previous_year}
+
+          Weather through **{yesterday.strftime("%B %-d, %Y")}**.
+
+          | | **Earth City** | **Columbia** | **Paducah** |
+          |---|---:|---:|---:|
+          | 🌡️ **Average Temperature** | **{ec["current"]["avgTemp"]}°** | **{co["current"]["avgTemp"]}°** | **{pa["current"]["avgTemp"]}°** |
+          | ↳ vs. Last Year | {change_html(ec["change"]["avgTemp"])} | {change_html(co["change"]["avgTemp"])} | {change_html(pa["change"]["avgTemp"])} |
+          | 🔥 **High Temperature** | **{ec["current"]["highTemp"]}°** | **{co["current"]["highTemp"]}°** | **{pa["current"]["highTemp"]}°** |
+          | ↳ vs. Last Year | {change_html(ec["change"]["highTemp"])} | {change_html(co["change"]["highTemp"])} | {change_html(pa["change"]["highTemp"])} |
+          | ❄️ **Low Temperature** | **{ec["current"]["lowTemp"]}°** | **{co["current"]["lowTemp"]}°** | **{pa["current"]["lowTemp"]}°** |
+          | ↳ vs. Last Year | {change_html(ec["change"]["lowTemp"])} | {change_html(co["change"]["lowTemp"])} | {change_html(pa["change"]["lowTemp"])} |
+          | 🌧️ **Rainfall** | **{ec["current"]["rainfall"]:.2f}"** | **{co["current"]["rainfall"]:.2f}"** | **{pa["current"]["rainfall"]:.2f}"** |
+          | ↳ vs. Last Year | {rain_change_html(ec["change"]["rainfall"])} | {rain_change_html(co["change"]["rainfall"])} | {rain_change_html(pa["change"]["rainfall"])} |
+
+          ### 📊 How to read the comparison
+
+          - 🟢 Positive = higher or more than last year
+          - 🔵 Negative = lower or less than last year
+          - ⚪ No change = same as last year
+
+          ---
+
+          *Weather data is automatically updated daily.*
+
+          *Source: Visual Crossing Weather Data.*
+          """
+
           with open(
               README_FILE,
               "w"
           ) as file:
 
               file.write(
-                  readme_text
+                  readme
+              )
+
+
+          # =================================================
+          # WRITE GITHUB PAGES
+          # =================================================
+
+          with open(
+              HTML_FILE,
+              "w"
+          ) as file:
+
+              file.write(
+                  html
               )
 
 
@@ -1304,6 +1775,11 @@ jobs:
           )
 
           print(
+              f"  - {HTML_FILE}",
+              flush=True
+          )
+
+          print(
               "========================================",
               flush=True
           )
@@ -1312,7 +1788,7 @@ jobs:
 
 
       # =====================================================
-      # COMMIT UPDATED FILES
+      # COMMIT EVERYTHING
       # =====================================================
 
       - name: Commit updated weather data
@@ -1327,10 +1803,11 @@ jobs:
           git add \
             history.json \
             weather-daily.json \
-            README.md
+            README.md \
+            index.html
 
           git diff --cached --quiet || \
             git commit \
-            -m "Update monthly weather report"
+            -m "Update monthly weather dashboard"
 
           git push
