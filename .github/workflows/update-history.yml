@@ -61,14 +61,14 @@ jobs:
                   "state": "MO"
               },
 
-              "42003": {
-                  "name": "Paducah",
-                  "state": "KY"
-              },
-
               "62234": {
                   "name": "Collinsville",
                   "state": "IL"
+              },
+
+              "42003": {
+                  "name": "Paducah",
+                  "state": "KY"
               }
 
           }
