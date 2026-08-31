@@ -48,19 +48,29 @@ jobs:
 
           API_KEY = os.environ["VC_API_KEY"]
 
+
           LOCATIONS = {
+
               "63045": {
                   "name": "Earth City",
                   "state": "MO"
               },
+
               "65202": {
                   "name": "Columbia",
                   "state": "MO"
               },
+
               "42003": {
                   "name": "Paducah",
                   "state": "KY"
+              },
+
+              "62234": {
+                  "name": "Collinsville",
+                  "state": "IL"
               }
+
           }
 
 
@@ -69,6 +79,8 @@ jobs:
           # =================================================
 
           today = date.today()
+
+          # Only use completed days.
           yesterday = today - timedelta(days=1)
 
           current_year = yesterday.year
@@ -76,11 +88,13 @@ jobs:
 
           current_month = yesterday.month
 
+
           current_start = date(
               current_year,
               current_month,
               1
           )
+
 
           previous_start = date(
               previous_year,
@@ -88,7 +102,9 @@ jobs:
               1
           )
 
+
           current_end = yesterday
+
 
           previous_end = date(
               previous_year,
@@ -103,9 +119,14 @@ jobs:
 
           cache_file = "weather-daily.json"
 
+
           if os.path.exists(cache_file):
 
-              with open(cache_file, "r") as file:
+              with open(
+                  cache_file,
+                  "r"
+              ) as file:
+
                   cache = json.load(file)
 
           else:
@@ -113,9 +134,11 @@ jobs:
               cache = {}
 
 
+          # Make sure every location has a cache.
           for zip_code in LOCATIONS:
 
               if zip_code not in cache:
+
                   cache[zip_code] = {}
 
 
@@ -144,16 +167,30 @@ jobs:
                   "&contentType=json"
               )
 
+
+              query_cost = (
+                  end_date - start_date
+              ).days + 1
+
+
               print("")
-              print("Visual Crossing request:")
-              print(f"  Location: {zip_code}")
               print(
-                  f"  Dates: {start_date} through {end_date}"
+                  "Visual Crossing request:"
               )
+
               print(
-                  f"  Query cost: "
-                  f"{(end_date - start_date).days + 1}"
+                  f"  Location: {zip_code}"
               )
+
+              print(
+                  f"  Dates: "
+                  f"{start_date} through {end_date}"
+              )
+
+              print(
+                  f"  Query cost: {query_cost}"
+              )
+
 
               request = urllib.request.Request(
                   url,
@@ -162,6 +199,7 @@ jobs:
                           "GitHub-Actions-Weather-Workflow/1.0"
                   }
               )
+
 
               try:
 
@@ -174,24 +212,37 @@ jobs:
                           response.read().decode()
                       )
 
+
               except urllib.error.HTTPError as error:
 
                   try:
+
                       error_body = error.read().decode(
                           "utf-8",
                           errors="replace"
                       )
+
                   except Exception:
-                      error_body = "Unable to read error response."
+
+                      error_body = (
+                          "Unable to read error response."
+                      )
+
 
                   print("")
                   print(
                       "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                   )
+
                   print(
-                      f"Visual Crossing HTTP ERROR {error.code}"
+                      f"Visual Crossing HTTP ERROR "
+                      f"{error.code}"
                   )
-                  print(error_body)
+
+                  print(
+                      error_body
+                  )
+
                   print(
                       "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                   )
@@ -205,57 +256,81 @@ jobs:
 
           total_query_cost = 0
 
+
           def update_cache(
               zip_code,
               start_date,
               end_date,
-              year
+              label
           ):
 
               global total_query_cost
 
+
               missing = []
 
+
               current = start_date
+
 
               while current <= end_date:
 
                   key = str(current)
 
+
                   if key not in cache[zip_code]:
 
-                      missing.append(current)
+                      missing.append(
+                          current
+                      )
+
 
                   current += timedelta(days=1)
 
 
+              location = LOCATIONS[zip_code]
+
+
               print("")
               print(
+                  "========================================"
+              )
+
+              print(
                   f"Checking "
-                  f"{LOCATIONS[zip_code]['name']}, "
-                  f"{LOCATIONS[zip_code]['state']} "
+                  f"{location['name']}, "
+                  f"{location['state']} "
                   f"{zip_code}"
               )
 
               print(
-                  f"Missing {year}-year days: "
+                  "========================================"
+              )
+
+              print(
+                  f"Missing {label} days: "
                   f"{len(missing)}"
               )
 
 
+              # Nothing new to download.
               if not missing:
+
                   return
 
 
               # ---------------------------------------------
-              # Pull missing dates in groups of 7 days
+              # Download missing dates in groups of 7 days.
               # ---------------------------------------------
 
               group_start = missing[0]
+
               previous = missing[0]
+
 
               for current in missing[1:]:
 
+                  # A gap means the previous group is complete.
                   if (
                       current - previous
                   ).days > 1:
@@ -266,9 +341,15 @@ jobs:
                           previous
                       )
 
-                      days = data.get("days", [])
+
+                      days = data.get(
+                          "days",
+                          []
+                      )
+
 
                       total_query_cost += len(days)
+
 
                       for day in days:
 
@@ -288,11 +369,17 @@ jobs:
                                   day.get("tempmin"),
 
                               "precip":
-                                  day.get("precip", 0) or 0
+                                  day.get(
+                                      "precip",
+                                      0
+                                  ) or 0
                           }
+
 
                       group_start = current
 
+
+                  # Maximum group size = 7 days.
                   elif (
                       (current - group_start).days >= 6
                   ):
@@ -303,9 +390,15 @@ jobs:
                           current
                       )
 
-                      days = data.get("days", [])
+
+                      days = data.get(
+                          "days",
+                          []
+                      )
+
 
                       total_query_cost += len(days)
+
 
                       for day in days:
 
@@ -325,13 +418,25 @@ jobs:
                                   day.get("tempmin"),
 
                               "precip":
-                                  day.get("precip", 0) or 0
+                                  day.get(
+                                      "precip",
+                                      0
+                                  ) or 0
                           }
 
-                      group_start = current + timedelta(days=1)
+
+                      group_start = (
+                          current +
+                          timedelta(days=1)
+                      )
+
 
                   previous = current
 
+
+              # ---------------------------------------------
+              # Download remaining group.
+              # ---------------------------------------------
 
               if group_start <= previous:
 
@@ -341,9 +446,15 @@ jobs:
                       previous
                   )
 
-                  days = data.get("days", [])
+
+                  days = data.get(
+                      "days",
+                      []
+                  )
+
 
                   total_query_cost += len(days)
+
 
                   for day in days:
 
@@ -363,7 +474,10 @@ jobs:
                               day.get("tempmin"),
 
                           "precip":
-                              day.get("precip", 0) or 0
+                              day.get(
+                                  "precip",
+                                  0
+                              ) or 0
                       }
 
 
@@ -373,18 +487,21 @@ jobs:
 
           for zip_code in LOCATIONS:
 
+              # Current month this year.
               update_cache(
                   zip_code,
                   current_start,
                   current_end,
-                  "current"
+                  "current-year"
               )
 
+
+              # Same month last year.
               update_cache(
                   zip_code,
                   previous_start,
                   previous_end,
-                  "previous"
+                  "previous-year"
               )
 
 
@@ -416,11 +533,14 @@ jobs:
 
               days = []
 
+
               current = start_date
+
 
               while current <= end_date:
 
                   key = str(current)
+
 
                   if key in cache[zip_code]:
 
@@ -428,33 +548,57 @@ jobs:
                           cache[zip_code][key]
                       )
 
+
                   current += timedelta(days=1)
 
 
               temperatures = [
+
                   d["temp"]
+
                   for d in days
+
                   if d.get("temp") is not None
+
               ]
+
 
               highs = [
+
                   d["tempmax"]
+
                   for d in days
+
                   if d.get("tempmax") is not None
+
               ]
+
 
               lows = [
+
                   d["tempmin"]
+
                   for d in days
+
                   if d.get("tempmin") is not None
+
               ]
 
+
               rainfall = sum(
-                  d.get("precip", 0) or 0
+
+                  d.get(
+                      "precip",
+                      0
+                  ) or 0
+
                   for d in days
+
               )
 
+
               return {
+
                   "avgTemp":
                       round(
                           sum(temperatures)
@@ -464,21 +608,25 @@ jobs:
                       if temperatures
                       else None,
 
+
                   "highTemp":
                       max(highs)
                       if highs
                       else None,
+
 
                   "lowTemp":
                       min(lows)
                       if lows
                       else None,
 
+
                   "rainfall":
                       round(
                           rainfall,
                           2
                       )
+
               }
 
 
@@ -486,62 +634,99 @@ jobs:
           # BUILD HISTORY.JSON
           # =================================================
 
-          month_name = yesterday.strftime("%B")
+          month_name = yesterday.strftime(
+              "%B"
+          )
+
 
           history = {
-              "generated": str(today),
 
-              "month": month_name,
+              "generated":
+                  str(today),
 
-              "currentYear": current_year,
 
-              "previousYear": previous_year,
+              "month":
+                  month_name,
+
+
+              "currentYear":
+                  current_year,
+
+
+              "previousYear":
+                  previous_year,
+
 
               "daysIncluded":
-                  (current_end - current_start).days + 1,
+                  (
+                      current_end -
+                      current_start
+                  ).days + 1,
+
 
               "currentPeriod":
-                  f"{current_start} through {current_end}",
+                  (
+                      f"{current_start} "
+                      f"through "
+                      f"{current_end}"
+                  ),
+
 
               "previousPeriod":
-                  f"{previous_start} through {previous_end}",
+                  (
+                      f"{previous_start} "
+                      f"through "
+                      f"{previous_end}"
+                  ),
+
 
               "weather": [],
 
+
               "locations": []
+
           }
 
 
           # =================================================
-          # CALCULATE EACH METRIC
+          # METRICS
           # =================================================
 
           metric_definitions = [
+
               (
                   "Average Temperature",
                   "°F",
                   "avgTemp"
               ),
+
               (
                   "High Temperature",
                   "°F",
                   "highTemp"
               ),
+
               (
                   "Low Temperature",
                   "°F",
                   "lowTemp"
               ),
+
               (
                   "Rainfall",
                   "in",
                   "rainfall"
               )
+
           ]
 
 
           results = {}
 
+
+          # =================================================
+          # CALCULATE EACH LOCATION
+          # =================================================
 
           for zip_code, location in LOCATIONS.items():
 
@@ -566,36 +751,57 @@ jobs:
                           previous_start,
                           previous_end
                       )
+
               }
 
+
+          # =================================================
+          # BUILD WEATHER METRICS
+          # =================================================
 
           for metric_name, unit, key in metric_definitions:
 
               current_values = {}
+
               previous_values = {}
+
               changes = {}
+
 
               for zip_code in LOCATIONS:
 
                   current_value = results[
                       zip_code
-                  ]["current"][key]
+                  ][
+                      "current"
+                  ][
+                      key
+                  ]
+
 
                   previous_value = results[
                       zip_code
-                  ]["previous"][key]
+                  ][
+                      "previous"
+                  ][
+                      key
+                  ]
+
 
                   current_values[
                       zip_code
                   ] = current_value
 
+
                   previous_values[
                       zip_code
                   ] = previous_value
 
+
                   if (
                       current_value is not None
-                      and previous_value is not None
+                      and
+                      previous_value is not None
                   ):
 
                       changes[
@@ -629,6 +835,7 @@ jobs:
 
                   "change":
                       changes
+
               })
 
 
@@ -648,6 +855,7 @@ jobs:
 
                   "state":
                       location["state"]
+
               })
 
 
@@ -659,6 +867,13 @@ jobs:
 
               raise RuntimeError(
                   "No weather data generated."
+              )
+
+
+          if not history["locations"]:
+
+              raise RuntimeError(
+                  "No locations were generated."
               )
 
 
@@ -683,25 +898,34 @@ jobs:
           # =================================================
 
           cached_records = sum(
+
               len(records)
+
               for records in cache.values()
+
           )
+
 
           print("")
           print(
               "========================================"
           )
+
           print(
               "WEATHER UPDATE COMPLETE"
           )
+
           print(
               "========================================"
           )
 
           print(
               f"Comparison: "
-              f"{month_name} {current_year} "
-              f"vs {month_name} {previous_year}"
+              f"{month_name} "
+              f"{current_year} "
+              f"vs "
+              f"{month_name} "
+              f"{previous_year}"
           )
 
           print(
@@ -710,7 +934,8 @@ jobs:
           )
 
           print(
-              f"Visual Crossing query cost this run: "
+              f"Visual Crossing query cost "
+              f"this run: "
               f"{total_query_cost}"
           )
 
