@@ -1,688 +1,375 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
-
-<title>
-August 2026 Weather Comparison
-</title>
+<title>Weather Comparison</title>
 
 <style>
 
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-
-    color: #172033;
-
-    background:
-        linear-gradient(
-            135deg,
-            #eaf6ff 0%,
-            #f8fbff 45%,
-            #eef8f2 100%
-        );
-
-    min-height: 100vh;
-}
-
-
-.page {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 35px 20px 50px;
-}
-
-
-.hero {
-    position: relative;
-    overflow: hidden;
-
-    padding: 42px 38px;
-
-    border-radius: 26px;
-
-    color: white;
-
-    background:
-        linear-gradient(
-            135deg,
-            #1677c8,
-            #35a9e8 55%,
-            #66c7b0
-        );
-
-    box-shadow:
-        0 18px 45px
-        rgba(24, 91, 140, 0.20);
-
-    margin-bottom: 28px;
-}
-
-
-.hero::after {
-    content: "☀️";
-
-    position: absolute;
-
-    right: 35px;
-    top: 20px;
-
-    font-size: 100px;
-
-    opacity: 0.18;
-}
-
-
-.eyebrow {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    opacity: 0.85;
-    margin-bottom: 8px;
-}
-
-
-h1 {
-    margin: 0;
-
-    font-size:
-        clamp(30px, 5vw, 48px);
-
-    line-height: 1.05;
-}
-
-
-.subtitle {
-    margin-top: 14px;
-
-    font-size: 18px;
-
-    opacity: 0.92;
-}
-
-
-.period {
-    display: inline-block;
-
-    margin-top: 18px;
-
-    padding: 8px 13px;
-
-    border-radius: 999px;
-
-    background:
-        rgba(255,255,255,0.17);
-
-    font-size: 13px;
-}
-
-
-.card {
-    background: white;
-
-    border-radius: 22px;
-
-    overflow: hidden;
-
-    box-shadow:
-        0 12px 35px
-        rgba(31, 66, 92, 0.10);
-
-    margin-bottom: 24px;
-}
-
-
-.table-wrap {
-    overflow-x: auto;
-}
-
-
-table {
-    width: 100%;
-
-    border-collapse: collapse;
-
-    min-width: 760px;
-}
-
-
-th {
-    padding: 22px 20px;
-
-    background: #f4f8fc;
-
-    color: #27445c;
-
-    font-size: 15px;
-
-    text-align: center;
-
-    border-bottom:
-        1px solid #e4edf4;
-}
-
-
-th:first-child {
-    text-align: left;
-    width: 31%;
-}
-
-
-td {
-    padding: 20px;
-
-    border-bottom:
-        1px solid #edf2f6;
-
-    text-align: center;
-
-    font-size: 17px;
-}
-
-
-td:first-child {
-    text-align: left;
-
-    color: #31475a;
-
-    font-weight: 600;
-}
-
-
-tr:last-child td {
-    border-bottom: none;
-}
-
-
-.location {
-    display: block;
-
-    font-size: 18px;
-
-    color: #173d59;
-}
-
-
-.state {
-    display: block;
-
-    margin-top: 3px;
-
-    font-size: 12px;
-
-    font-weight: 500;
-
-    color: #7890a2;
-}
-
-
-.metric {
-    font-size: 16px;
-}
-
-
-.value {
-    font-size: 25px;
-
-    font-weight: 750;
-
-    color: #142d40;
-}
-
-
-.comparison td {
-    padding-top: 7px;
-
-    padding-bottom: 17px;
-
-    background: #fbfdff;
-
-    font-size: 14px;
-}
-
-
-.comparison td:first-child {
-    color: #728697;
-
-    font-weight: 600;
-}
-
-
-.positive {
-    color: #17834b;
-
-    font-weight: 750;
-}
-
-
-.negative {
-    color: #2670b8;
-
-    font-weight: 750;
-}
-
-
-.neutral {
-    color: #758493;
-
-    font-weight: 700;
-}
-
-
-.legend {
-    display: flex;
-
-    flex-wrap: wrap;
-
-    gap: 18px;
-
-    padding: 20px 24px;
-
-    font-size: 13px;
-
-    color: #637789;
-}
-
-
-.legend span {
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 7px;
-}
-
-
-.dot {
-    width: 9px;
-    height: 9px;
-
-    border-radius: 50%;
-
-    display: inline-block;
-}
-
-
-.green {
-    background: #17834b;
-}
-
-
-.blue {
-    background: #2670b8;
-}
-
-
-.gray {
-    background: #758493;
-}
-
-
-.footer {
-    text-align: center;
-
-    color: #718494;
-
-    font-size: 12px;
-
-    margin-top: 25px;
-
-    line-height: 1.7;
-}
-
-
-@media (max-width: 700px) {
-
-    .page {
-        padding: 18px 12px 35px;
+    * {
+        box-sizing: border-box;
     }
 
-    .hero {
-        padding: 30px 24px;
-        border-radius: 20px;
+    body {
+        margin: 0;
+        padding: 18px;
+        background: #ffffff;
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Arial,
+            sans-serif;
+        color: #172033;
     }
 
-    .hero::after {
-        font-size: 70px;
-        right: 15px;
-        top: 15px;
+    .weather-table {
+        width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
+        border-collapse: separate;
+        border-spacing: 0;
+        overflow: hidden;
+        border-radius: 14px;
+        box-shadow:
+            0 3px 14px rgba(30, 60, 90, 0.12);
     }
 
-    td, th {
-        padding-left: 14px;
-        padding-right: 14px;
+    .weather-table th {
+        background: #176fae;
+        color: #ffffff;
+        padding: 16px 20px;
+        text-align: center;
+        font-size: 17px;
+        font-weight: 700;
+        border-right: 1px solid rgba(255,255,255,0.18);
     }
-}
+
+    .weather-table th:first-child {
+        text-align: left;
+        width: 30%;
+    }
+
+    .weather-table th:last-child {
+        border-right: none;
+    }
+
+    .location-name {
+        display: block;
+        font-size: 18px;
+    }
+
+    .location-state {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        font-weight: 500;
+        opacity: 0.80;
+    }
+
+    .weather-table td {
+        padding: 15px 20px;
+        text-align: center;
+        border-bottom: 1px solid #e5edf3;
+        border-right: 1px solid #e5edf3;
+        background: #ffffff;
+        font-size: 17px;
+    }
+
+    .weather-table td:first-child {
+        text-align: left;
+        font-weight: 650;
+        color: #34495a;
+    }
+
+    .weather-table td:last-child {
+        border-right: none;
+    }
+
+    .weather-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .metric-row td {
+        padding-top: 20px;
+        padding-bottom: 10px;
+    }
+
+    .metric-value {
+        font-size: 25px;
+        font-weight: 750;
+        color: #142d40;
+    }
+
+    .comparison-row td {
+        padding-top: 5px;
+        padding-bottom: 17px;
+        background: #f8fbfd;
+        font-size: 14px;
+    }
+
+    .comparison-label {
+        color: #718494 !important;
+        font-size: 14px;
+        font-weight: 600 !important;
+    }
+
+    .positive {
+        color: #16834b;
+        font-weight: 750;
+    }
+
+    .negative {
+        color: #2670b8;
+        font-weight: 750;
+    }
+
+    .neutral {
+        color: #758493;
+        font-weight: 700;
+    }
+
+    @media (max-width: 700px) {
+
+        body {
+            padding: 8px;
+        }
+
+        .weather-table {
+            min-width: 700px;
+        }
+
+        .weather-table th,
+        .weather-table td {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+    }
 
 </style>
-
 </head>
 
 <body>
 
-<main class="page">
+<table class="weather-table">
 
-    <section class="hero">
+    <thead>
+        <tr>
 
-        <div class="eyebrow">
-            Weather at a Glance
-        </div>
+            <th>
+                Weather
+            </th>
 
-        <h1>
-            August 2026
-        </h1>
+            <th>
+                <span class="location-name">
+                    Earth City
+                </span>
+                <span class="location-state">
+                    Missouri
+                </span>
+            </th>
 
-        <div class="subtitle">
-            August 2026
-            vs. August 2025
-        </div>
+            <th>
+                <span class="location-name">
+                    Columbia
+                </span>
+                <span class="location-state">
+                    Missouri
+                </span>
+            </th>
 
-        <div class="period">
-            Through August 30, 2026
-        </div>
+            <th>
+                <span class="location-name">
+                    Paducah
+                </span>
+                <span class="location-state">
+                    Kentucky
+                </span>
+            </th>
 
-    </section>
+        </tr>
+    </thead>
 
+    <tbody>
 
-    <section class="card">
+        <!-- AVERAGE TEMPERATURE -->
 
-        <div class="table-wrap">
+        <tr class="metric-row">
 
-            <table>
+            <td>
+                🌡️ Average Temperature
+            </td>
 
-                <thead>
+            <td>
+                <span class="metric-value">78.5°</span>
+            </td>
 
-                    <tr>
+            <td>
+                <span class="metric-value">76.7°</span>
+            </td>
 
-                        <th>
-                            Weather Metric
-                        </th>
+            <td>
+                <span class="metric-value">77.9°</span>
+            </td>
 
-                        <th>
-                            <span class="location">
-                                Earth City
-                            </span>
-                            <span class="state">
-                                Missouri
-                            </span>
-                        </th>
+        </tr>
 
-                        <th>
-                            <span class="location">
-                                Columbia
-                            </span>
-                            <span class="state">
-                                Missouri
-                            </span>
-                        </th>
+        <tr class="comparison-row">
 
-                        <th>
-                            <span class="location">
-                                Paducah
-                            </span>
-                            <span class="state">
-                                Kentucky
-                            </span>
-                        </th>
+            <td class="comparison-label">
+                ↳ vs. Last Year
+            </td>
 
-                    </tr>
+            <td>
+                <span class="positive">+1.8°</span>
+            </td>
 
-                </thead>
+            <td>
+                <span class="positive">+2.0°</span>
+            </td>
 
-                <tbody>
+            <td>
+                <span class="positive">+2.0°</span>
+            </td>
 
+        </tr>
 
-                    <tr>
 
-                        <td class="metric">
-                            🌡️ Average Temperature
-                        </td>
+        <!-- HIGH TEMPERATURE -->
 
-                        <td>
-                            <span class="value">
-                                78.5°
-                            </span>
-                        </td>
+        <tr class="metric-row">
 
-                        <td>
-                            <span class="value">
-                                76.7°
-                            </span>
-                        </td>
+            <td>
+                🔥 High Temperature
+            </td>
 
-                        <td>
-                            <span class="value">
-                                77.9°
-                            </span>
-                        </td>
+            <td>
+                <span class="metric-value">95.5°</span>
+            </td>
 
-                    </tr>
+            <td>
+                <span class="metric-value">94.9°</span>
+            </td>
 
+            <td>
+                <span class="metric-value">98.1°</span>
+            </td>
 
-                    <tr class="comparison">
+        </tr>
 
-                        <td>
-                            ↳ vs. Last Year
-                        </td>
+        <tr class="comparison-row">
 
-                        <td>
-                            <span class="positive">+1.8°</span>
-                        </td>
+            <td class="comparison-label">
+                ↳ vs. Last Year
+            </td>
 
-                        <td>
-                            <span class="positive">+2.0°</span>
-                        </td>
+            <td>
+                <span class="negative">−1.1°</span>
+            </td>
 
-                        <td>
-                            <span class="positive">+2.0°</span>
-                        </td>
+            <td>
+                <span class="negative">−1.1°</span>
+            </td>
 
-                    </tr>
+            <td>
+                <span class="positive">+0.8°</span>
+            </td>
 
+        </tr>
 
-                    <tr>
 
-                        <td class="metric">
-                            🔥 High Temperature
-                        </td>
+        <!-- LOW TEMPERATURE -->
 
-                        <td>
-                            <span class="value">
-                                95.5°
-                            </span>
-                        </td>
+        <tr class="metric-row">
 
-                        <td>
-                            <span class="value">
-                                94.9°
-                            </span>
-                        </td>
+            <td>
+                ❄️ Low Temperature
+            </td>
 
-                        <td>
-                            <span class="value">
-                                98.1°
-                            </span>
-                        </td>
+            <td>
+                <span class="metric-value">59.2°</span>
+            </td>
 
-                    </tr>
+            <td>
+                <span class="metric-value">59.4°</span>
+            </td>
 
+            <td>
+                <span class="metric-value">60.0°</span>
+            </td>
 
-                    <tr class="comparison">
+        </tr>
 
-                        <td>
-                            ↳ vs. Last Year
-                        </td>
+        <tr class="comparison-row">
 
-                        <td>
-                            <span class="negative">−1.1°</span>
-                        </td>
+            <td class="comparison-label">
+                ↳ vs. Last Year
+            </td>
 
-                        <td>
-                            <span class="negative">−1.1°</span>
-                        </td>
+            <td>
+                <span class="positive">+6.6°</span>
+            </td>
 
-                        <td>
-                            <span class="positive">+0.8°</span>
-                        </td>
+            <td>
+                <span class="positive">+10.2°</span>
+            </td>
 
-                    </tr>
+            <td>
+                <span class="positive">+10.5°</span>
+            </td>
 
+        </tr>
 
-                    <tr>
 
-                        <td class="metric">
-                            ❄️ Low Temperature
-                        </td>
+        <!-- RAINFALL -->
 
-                        <td>
-                            <span class="value">
-                                59.2°
-                            </span>
-                        </td>
+        <tr class="metric-row">
 
-                        <td>
-                            <span class="value">
-                                59.4°
-                            </span>
-                        </td>
+            <td>
+                🌧️ Rainfall
+            </td>
 
-                        <td>
-                            <span class="value">
-                                60.0°
-                            </span>
-                        </td>
+            <td>
+                <span class="metric-value">1.80"</span>
+            </td>
 
-                    </tr>
+            <td>
+                <span class="metric-value">4.21"</span>
+            </td>
 
+            <td>
+                <span class="metric-value">4.37"</span>
+            </td>
 
-                    <tr class="comparison">
+        </tr>
 
-                        <td>
-                            ↳ vs. Last Year
-                        </td>
+        <tr class="comparison-row">
 
-                        <td>
-                            <span class="positive">+6.6°</span>
-                        </td>
+            <td class="comparison-label">
+                ↳ vs. Last Year
+            </td>
 
-                        <td>
-                            <span class="positive">+10.2°</span>
-                        </td>
+            <td>
+                <span class="positive">+0.35"</span>
+            </td>
 
-                        <td>
-                            <span class="positive">+10.5°</span>
-                        </td>
+            <td>
+                <span class="positive">+4.08"</span>
+            </td>
 
-                    </tr>
+            <td>
+                <span class="positive">+3.23"</span>
+            </td>
 
+        </tr>
 
-                    <tr>
+    </tbody>
 
-                        <td class="metric">
-                            🌧️ Rainfall
-                        </td>
-
-                        <td>
-                            <span class="value">
-                                1.80"
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="value">
-                                4.21"
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="value">
-                                4.37"
-                            </span>
-                        </td>
-
-                    </tr>
-
-
-                    <tr class="comparison">
-
-                        <td>
-                            ↳ vs. Last Year
-                        </td>
-
-                        <td>
-                            <span class="positive">+0.35"</span>
-                        </td>
-
-                        <td>
-                            <span class="positive">+4.08"</span>
-                        </td>
-
-                        <td>
-                            <span class="positive">+3.23"</span>
-                        </td>
-
-                    </tr>
-
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-
-        <div class="legend">
-
-            <span>
-                <span class="dot green"></span>
-                Higher / more than last year
-            </span>
-
-            <span>
-                <span class="dot blue"></span>
-                Lower / less than last year
-            </span>
-
-            <span>
-                <span class="dot gray"></span>
-                No change
-            </span>
-
-        </div>
-
-    </section>
-
-
-    <div class="footer">
-
-        Data through
-        August 30, 2026.
-        <br>
-
-        Automatically updated daily
-        from Visual Crossing Weather Data.
-
-    </div>
-
-</main>
+</table>
 
 </body>
-
 </html>
