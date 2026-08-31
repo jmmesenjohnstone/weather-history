@@ -5,10 +5,10 @@ on:
   # AUTOMATIC DAILY RUN
   # =====================================================
   #
-  # 4:50 AM UTC = 11:50 PM Central during daylight saving
-  # time.
+  # 4:50 AM UTC = 11:50 PM Central during daylight
+  # saving time.
   #
-  # Manual runs remain available from GitHub Actions.
+  # Manual runs remain available.
   #
   schedule:
     - cron: "50 4 * * *"
@@ -33,7 +33,7 @@ jobs:
 
 
       # =====================================================
-      # GENERATE MONTHLY WEATHER DATA
+      # GENERATE WEATHER DATA
       # =====================================================
 
       - name: Update weather data
@@ -58,6 +58,7 @@ jobs:
 
           DAILY_FILE = "weather-daily.json"
           HISTORY_FILE = "history.json"
+          README_FILE = "README.md"
 
           LOCATIONS = {
               "63045": {
@@ -123,7 +124,7 @@ jobs:
 
 
           # =================================================
-          # DETERMINE COMPARISON DATES
+          # COMPARISON DATES
           # =================================================
 
           current_start = date(
@@ -182,7 +183,7 @@ jobs:
 
 
           # =================================================
-          # ENSURE LOCATION STRUCTURE EXISTS
+          # ENSURE LOCATION STRUCTURE
           # =================================================
 
           for zip_code in LOCATIONS:
@@ -201,9 +202,13 @@ jobs:
 
                   }
 
-              elif "days" not in daily_data["locations"][zip_code]:
+              elif "days" not in daily_data[
+                  "locations"
+              ][zip_code]:
 
-                  daily_data["locations"][zip_code]["days"] = {}
+                  daily_data[
+                      "locations"
+                  ][zip_code]["days"] = {}
 
 
           # =================================================
@@ -240,7 +245,7 @@ jobs:
 
               print("")
               print(
-                  f"Visual Crossing request:",
+                  "Visual Crossing request:",
                   flush=True
               )
 
@@ -250,7 +255,8 @@ jobs:
               )
 
               print(
-                  f"  Dates: {start_date} through {end_date}",
+                  f"  Dates: "
+                  f"{start_date} through {end_date}",
                   flush=True
               )
 
@@ -299,7 +305,8 @@ jobs:
                   )
 
                   print(
-                      f"Visual Crossing HTTP ERROR {error.code}",
+                      f"Visual Crossing HTTP ERROR "
+                      f"{error.code}",
                       flush=True
                   )
 
@@ -374,9 +381,13 @@ jobs:
                       continue
 
 
-                  daily_data["locations"][
+                  daily_data[
+                      "locations"
+                  ][
                       zip_code
-                  ]["days"][weather_date] = {
+                  ][
+                      "days"
+                  ][weather_date] = {
 
                       "temp":
                           day.get("temp"),
@@ -436,15 +447,9 @@ jobs:
           # =================================================
           # FETCH MISSING DATA
           # =================================================
-          #
-          # We request missing dates in small batches.
-          #
-          # This keeps the initial bootstrap controlled and
-          # makes the workflow's API usage easy to monitor.
-          #
-          # After the cache is populated, normal nightly runs
-          # should only need the newest completed day.
-          # =================================================
+
+          # Seven-day batches keep the initial bootstrap
+          # controlled and make API usage easy to monitor.
 
           BATCH_SIZE = 7
 
@@ -470,20 +475,12 @@ jobs:
               )
 
 
-              # ---------------------------------------------
-              # Current year missing dates
-              # ---------------------------------------------
-
               current_missing = missing_dates(
                   zip_code,
                   current_start,
                   current_end
               )
 
-
-              # ---------------------------------------------
-              # Previous year missing dates
-              # ---------------------------------------------
 
               previous_missing = missing_dates(
                   zip_code,
@@ -506,7 +503,7 @@ jobs:
 
 
               # ---------------------------------------------
-              # Process current-year missing dates
+              # CURRENT YEAR
               # ---------------------------------------------
 
               for i in range(
@@ -520,14 +517,10 @@ jobs:
                   ]
 
 
-                  batch_start = batch[0]
-                  batch_end = batch[-1]
-
-
                   data = get_weather(
                       zip_code,
-                      batch_start,
-                      batch_end
+                      batch[0],
+                      batch[-1]
                   )
 
 
@@ -538,7 +531,7 @@ jobs:
 
 
               # ---------------------------------------------
-              # Process previous-year missing dates
+              # PREVIOUS YEAR
               # ---------------------------------------------
 
               for i in range(
@@ -552,14 +545,10 @@ jobs:
                   ]
 
 
-                  batch_start = batch[0]
-                  batch_end = batch[-1]
-
-
                   data = get_weather(
                       zip_code,
-                      batch_start,
-                      batch_end
+                      batch[0],
+                      batch[-1]
                   )
 
 
@@ -570,7 +559,7 @@ jobs:
 
 
           # =================================================
-          # CALCULATE STATISTICS FROM CACHE
+          # CALCULATE STATISTICS
           # =================================================
 
           def calculate(
@@ -678,7 +667,7 @@ jobs:
 
 
           # =================================================
-          # BUILD RESULTS
+          # CALCULATE LOCATION RESULTS
           # =================================================
 
           results = {}
@@ -750,7 +739,7 @@ jobs:
 
 
           # =================================================
-          # CREATE PHOCAS-FRIENDLY HISTORY.JSON
+          # PHOCAS HISTORY.JSON
           # =================================================
 
           output = {
@@ -786,40 +775,30 @@ jobs:
                           "°F",
 
                       "current": {
-
                           zip_code:
-                              results[zip_code]["current"][
-                                  "avgTemp"
-                              ]
-
+                              results[zip_code][
+                                  "current"
+                              ]["avgTemp"]
                           for zip_code in LOCATIONS
-
                       },
 
                       "previous": {
-
                           zip_code:
-                              results[zip_code]["previous"][
-                                  "avgTemp"
-                              ]
-
+                              results[zip_code][
+                                  "previous"
+                              ]["avgTemp"]
                           for zip_code in LOCATIONS
-
                       },
 
                       "change": {
-
                           zip_code:
-                              results[zip_code]["change"][
-                                  "avgTemp"
-                              ]
-
+                              results[zip_code][
+                                  "change"
+                              ]["avgTemp"]
                           for zip_code in LOCATIONS
-
                       }
 
                   },
-
 
                   {
                       "metric":
@@ -829,40 +808,30 @@ jobs:
                           "°F",
 
                       "current": {
-
                           zip_code:
-                              results[zip_code]["current"][
-                                  "highTemp"
-                              ]
-
+                              results[zip_code][
+                                  "current"
+                              ]["highTemp"]
                           for zip_code in LOCATIONS
-
                       },
 
                       "previous": {
-
                           zip_code:
-                              results[zip_code]["previous"][
-                                  "highTemp"
-                              ]
-
+                              results[zip_code][
+                                  "previous"
+                              ]["highTemp"]
                           for zip_code in LOCATIONS
-
                       },
 
                       "change": {
-
                           zip_code:
-                              results[zip_code]["change"][
-                                  "highTemp"
-                              ]
-
+                              results[zip_code][
+                                  "change"
+                              ]["highTemp"]
                           for zip_code in LOCATIONS
-
                       }
 
                   },
-
 
                   {
                       "metric":
@@ -872,40 +841,30 @@ jobs:
                           "°F",
 
                       "current": {
-
                           zip_code:
-                              results[zip_code]["current"][
-                                  "lowTemp"
-                              ]
-
+                              results[zip_code][
+                                  "current"
+                              ]["lowTemp"]
                           for zip_code in LOCATIONS
-
                       },
 
                       "previous": {
-
                           zip_code:
-                              results[zip_code]["previous"][
-                                  "lowTemp"
-                              ]
-
+                              results[zip_code][
+                                  "previous"
+                              ]["lowTemp"]
                           for zip_code in LOCATIONS
-
                       },
 
                       "change": {
-
                           zip_code:
-                              results[zip_code]["change"][
-                                  "lowTemp"
-                              ]
-
+                              results[zip_code][
+                                  "change"
+                              ]["lowTemp"]
                           for zip_code in LOCATIONS
-
                       }
 
                   },
-
 
                   {
                       "metric":
@@ -915,42 +874,32 @@ jobs:
                           "in",
 
                       "current": {
-
                           zip_code:
-                              results[zip_code]["current"][
-                                  "rainfall"
-                              ]
-
+                              results[zip_code][
+                                  "current"
+                              ]["rainfall"]
                           for zip_code in LOCATIONS
-
                       },
 
                       "previous": {
-
                           zip_code:
-                              results[zip_code]["previous"][
-                                  "rainfall"
-                              ]
-
+                              results[zip_code][
+                                  "previous"
+                              ]["rainfall"]
                           for zip_code in LOCATIONS
-
                       },
 
                       "change": {
-
                           zip_code:
-                              results[zip_code]["change"][
-                                  "rainfall"
-                              ]
-
+                              results[zip_code][
+                                  "change"
+                              ]["rainfall"]
                           for zip_code in LOCATIONS
-
                       }
 
                   }
 
               ],
-
 
               "locations": [
 
@@ -974,7 +923,272 @@ jobs:
 
 
           # =================================================
-          # SAVE DAILY CACHE
+          # HELPER: FORMAT CHANGE
+          # =================================================
+
+          def format_change(
+              value,
+              unit="°"
+          ):
+
+              if value is None:
+
+                  return "—"
+
+
+              if value > 0:
+
+                  return f"🟢 +{value}{unit}"
+
+
+              if value < 0:
+
+                  return f"🔵 −{abs(value)}{unit}"
+
+
+              return f"⚪ 0.0{unit}"
+
+
+          # =================================================
+          # HELPER: FORMAT RAINFALL CHANGE
+          # =================================================
+
+          def format_rain_change(
+              value
+          ):
+
+              if value is None:
+
+                  return "—"
+
+
+              if value > 0:
+
+                  return f"🟢 +{value:.2f}\""
+
+
+              if value < 0:
+
+                  return f"🔵 −{abs(value):.2f}\""
+
+
+              return '⚪ 0.00"'
+
+
+          # =================================================
+          # BUILD GITHUB README
+          # =================================================
+
+          location_order = [
+              "63045",
+              "65202",
+              "42003"
+          ]
+
+
+          readme = []
+
+
+          readme.append(
+              f"# 🌤️ {month_name} "
+              f"{current_year} Weather Comparison"
+          )
+
+
+          readme.append("")
+
+
+          readme.append(
+              f"### {month_name} {current_year} "
+              f"vs. {month_name} {previous_year}"
+          )
+
+
+          readme.append("")
+
+
+          readme.append(
+              f"Weather through **{yesterday.strftime('%B %-d, %Y')}** "
+              f"for our three locations."
+          )
+
+
+          readme.append("")
+
+
+          # -------------------------------------------------
+          # LOCATION HEADER
+          # -------------------------------------------------
+
+          readme.append(
+              "| | **Earth City** | **Columbia** | **Paducah** |"
+          )
+
+          readme.append(
+              "|---|---:|---:|---:|"
+          )
+
+
+          # -------------------------------------------------
+          # AVERAGE TEMPERATURE
+          # -------------------------------------------------
+
+          readme.append(
+              "| 🌡️ **Average Temperature** | "
+              f"**{results['63045']['current']['avgTemp']}°** | "
+              f"**{results['65202']['current']['avgTemp']}°** | "
+              f"**{results['42003']['current']['avgTemp']}°** |"
+          )
+
+
+          readme.append(
+              "| ↳ vs. Last Year | "
+              f"{format_change(results['63045']['change']['avgTemp'])} | "
+              f"{format_change(results['65202']['change']['avgTemp'])} | "
+              f"{format_change(results['42003']['change']['avgTemp'])} |"
+          )
+
+
+          # -------------------------------------------------
+          # HIGH TEMPERATURE
+          # -------------------------------------------------
+
+          readme.append(
+              "| 🔥 **High Temperature** | "
+              f"**{results['63045']['current']['highTemp']}°** | "
+              f"**{results['65202']['current']['highTemp']}°** | "
+              f"**{results['42003']['current']['highTemp']}°** |"
+          )
+
+
+          readme.append(
+              "| ↳ vs. Last Year | "
+              f"{format_change(results['63045']['change']['highTemp'])} | "
+              f"{format_change(results['65202']['change']['highTemp'])} | "
+              f"{format_change(results['42003']['change']['highTemp'])} |"
+          )
+
+
+          # -------------------------------------------------
+          # LOW TEMPERATURE
+          # -------------------------------------------------
+
+          readme.append(
+              "| ❄️ **Low Temperature** | "
+              f"**{results['63045']['current']['lowTemp']}°** | "
+              f"**{results['65202']['current']['lowTemp']}°** | "
+              f"**{results['42003']['current']['lowTemp']}°** |"
+          )
+
+
+          readme.append(
+              "| ↳ vs. Last Year | "
+              f"{format_change(results['63045']['change']['lowTemp'])} | "
+              f"{format_change(results['65202']['change']['lowTemp'])} | "
+              f"{format_change(results['42003']['change']['lowTemp'])} |"
+          )
+
+
+          # -------------------------------------------------
+          # RAINFALL
+          # -------------------------------------------------
+
+          readme.append(
+              '| 🌧️ **Rainfall** | '
+              f"**{results['63045']['current']['rainfall']:.2f}\"** | "
+              f"**{results['65202']['current']['rainfall']:.2f}\"** | "
+              f"**{results['42003']['current']['rainfall']:.2f}\"** |"
+          )
+
+
+          readme.append(
+              "| ↳ vs. Last Year | "
+              f"{format_rain_change(results['63045']['change']['rainfall'])} | "
+              f"{format_rain_change(results['65202']['change']['rainfall'])} | "
+              f"{format_rain_change(results['42003']['change']['rainfall'])} |"
+          )
+
+
+          readme.append("")
+
+
+          # -------------------------------------------------
+          # LEGEND
+          # -------------------------------------------------
+
+          readme.append(
+              "### 📊 How to read the comparison"
+          )
+
+
+          readme.append("")
+
+
+          readme.append(
+              "- 🟢 **Positive** = higher/more than last year"
+          )
+
+          readme.append(
+              "- 🔵 **Negative** = lower/less than last year"
+          )
+
+          readme.append(
+              '- ⚪ **No change** = same as last year'
+          )
+
+
+          readme.append("")
+
+
+          # -------------------------------------------------
+          # PERIOD INFORMATION
+          # -------------------------------------------------
+
+          readme.append(
+              "### 📅 Reporting Period"
+          )
+
+
+          readme.append("")
+
+
+          readme.append(
+              f"- **Current:** "
+              f"{current_start} through {current_end}"
+          )
+
+          readme.append(
+              f"- **Previous:** "
+              f"{previous_start} through {previous_end}"
+          )
+
+
+          readme.append("")
+
+
+          readme.append(
+              "---"
+          )
+
+
+          readme.append("")
+
+
+          readme.append(
+              "*Weather data is automatically updated daily.*"
+          )
+
+
+          readme.append(
+              "*Source: Visual Crossing Weather Data.*"
+          )
+
+
+          readme_text = "\n".join(readme) + "\n"
+
+
+          # =================================================
+          # WRITE FILES
           # =================================================
 
           with open(
@@ -989,10 +1203,6 @@ jobs:
               )
 
 
-          # =================================================
-          # SAVE PHOCAS HISTORY
-          # =================================================
-
           with open(
               HISTORY_FILE,
               "w"
@@ -1005,8 +1215,18 @@ jobs:
               )
 
 
+          with open(
+              README_FILE,
+              "w"
+          ) as file:
+
+              file.write(
+                  readme_text
+              )
+
+
           # =================================================
-          # FINAL USAGE REPORT
+          # FINAL REPORT
           # =================================================
 
           total_cached_records = sum(
@@ -1064,6 +1284,26 @@ jobs:
           )
 
           print(
+              "Generated:",
+              flush=True
+          )
+
+          print(
+              f"  - {DAILY_FILE}",
+              flush=True
+          )
+
+          print(
+              f"  - {HISTORY_FILE}",
+              flush=True
+          )
+
+          print(
+              f"  - {README_FILE}",
+              flush=True
+          )
+
+          print(
               "========================================",
               flush=True
           )
@@ -1072,7 +1312,7 @@ jobs:
 
 
       # =====================================================
-      # COMMIT UPDATED DATA
+      # COMMIT UPDATED FILES
       # =====================================================
 
       - name: Commit updated weather data
@@ -1086,10 +1326,11 @@ jobs:
 
           git add \
             history.json \
-            weather-daily.json
+            weather-daily.json \
+            README.md
 
           git diff --cached --quiet || \
             git commit \
-            -m "Update monthly historical weather"
+            -m "Update monthly weather report"
 
           git push
