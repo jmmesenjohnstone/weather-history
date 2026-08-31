@@ -1,8 +1,19 @@
 name: Update Monthly Historical Weather
 
 on:
-  # Run manually for now.
-  # Once everything is verified, we can add the daily schedule back.
+  # =====================================================
+  # AUTOMATIC DAILY RUN
+  # =====================================================
+  #
+  # 4:50 AM UTC = 11:50 PM Central during daylight saving
+  # time.
+  #
+  # The manual option remains available so the workflow
+  # can also be run from GitHub Actions whenever needed.
+  #
+  schedule:
+    - cron: "50 4 * * *"
+
   workflow_dispatch:
 
 permissions:
@@ -82,10 +93,7 @@ jobs:
           month_name = yesterday.strftime("%B")
 
 
-          # Current month:
-          # Example:
-          # August 1, 2026 -> August 30, 2026
-
+          # Current month
           current_start = date(
               current_year,
               current_month,
@@ -95,10 +103,7 @@ jobs:
           current_end = yesterday
 
 
-          # Same month last year:
-          # Example:
-          # August 1, 2025 -> August 30, 2025
-
+          # Same month last year
           previous_start = date(
               previous_year,
               current_month,
@@ -350,6 +355,9 @@ jobs:
               "previousYear":
                   previous_year,
 
+              "daysIncluded":
+                  yesterday.day,
+
               "currentPeriod":
                   f"{current_start} through {current_end}",
 
@@ -431,6 +439,35 @@ jobs:
 
 
               # ---------------------------------------------
+              # CALCULATE CHANGES
+              # ---------------------------------------------
+
+              avg_temp_change = round(
+                  current_stats["avgTemp"]
+                  - previous_stats["avgTemp"],
+                  1
+              )
+
+              high_temp_change = round(
+                  current_stats["highTemp"]
+                  - previous_stats["highTemp"],
+                  1
+              )
+
+              low_temp_change = round(
+                  current_stats["lowTemp"]
+                  - previous_stats["lowTemp"],
+                  1
+              )
+
+              rainfall_change = round(
+                  current_stats["rainfall"]
+                  - previous_stats["rainfall"],
+                  2
+              )
+
+
+              # ---------------------------------------------
               # SAVE
               # ---------------------------------------------
 
@@ -448,7 +485,23 @@ jobs:
                       current_stats,
 
                   "previous":
-                      previous_stats
+                      previous_stats,
+
+                  "change": {
+
+                      "avgTemp":
+                          avg_temp_change,
+
+                      "highTemp":
+                          high_temp_change,
+
+                      "lowTemp":
+                          low_temp_change,
+
+                      "rainfall":
+                          rainfall_change
+
+                  }
 
               }
 
@@ -508,6 +561,12 @@ jobs:
               f"{month_name} {current_year} "
               f"vs "
               f"{month_name} {previous_year}",
+              flush=True
+          )
+
+          print(
+              f"Completed days included: "
+              f"{yesterday.day}",
               flush=True
           )
 
