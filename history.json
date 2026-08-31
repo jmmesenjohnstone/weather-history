@@ -6,72 +6,99 @@
   "daysIncluded": 30,
   "currentPeriod": "2026-08-01 through 2026-08-30",
   "previousPeriod": "2025-08-01 through 2025-08-30",
-  "locations": {
-    "63045": {
-      "name": "Earth City",
-      "state": "MO",
+  "weather": [
+    {
+      "metric": "Average Temperature",
+      "unit": "\u00b0F",
       "current": {
-        "avgTemp": 78.5,
-        "highTemp": 95.5,
-        "lowTemp": 59.2,
-        "rainfall": 1.8
+        "63045": 78.5,
+        "65202": 76.7,
+        "42003": 77.9
       },
       "previous": {
-        "avgTemp": 76.8,
-        "highTemp": 96.6,
-        "lowTemp": 52.6,
-        "rainfall": 1.45
+        "63045": 76.7,
+        "65202": 74.7,
+        "42003": 75.9
       },
       "change": {
-        "avgTemp": 1.7,
-        "highTemp": -1.1,
-        "lowTemp": 6.6,
-        "rainfall": 0.35
+        "63045": 1.8,
+        "65202": 2.0,
+        "42003": 2.0
       }
     },
-    "65202": {
-      "name": "Columbia",
-      "state": "MO",
+    {
+      "metric": "High Temperature",
+      "unit": "\u00b0F",
       "current": {
-        "avgTemp": 76.7,
-        "highTemp": 94.9,
-        "lowTemp": 59.4,
-        "rainfall": 4.21
+        "63045": 95.5,
+        "65202": 94.9,
+        "42003": 98.1
       },
       "previous": {
-        "avgTemp": 74.7,
-        "highTemp": 96.4,
-        "lowTemp": 49.2,
-        "rainfall": 0.1
+        "63045": 96.6,
+        "65202": 96.0,
+        "42003": 97.3
       },
       "change": {
-        "avgTemp": 2.0,
-        "highTemp": -1.5,
-        "lowTemp": 10.2,
-        "rainfall": 4.11
+        "63045": -1.1,
+        "65202": -1.1,
+        "42003": 0.8
       }
     },
-    "42003": {
-      "name": "Paducah",
-      "state": "KY",
+    {
+      "metric": "Low Temperature",
+      "unit": "\u00b0F",
       "current": {
-        "avgTemp": 77.9,
-        "highTemp": 98.1,
-        "lowTemp": 60.0,
-        "rainfall": 4.37
+        "63045": 59.2,
+        "65202": 59.4,
+        "42003": 60.0
       },
       "previous": {
-        "avgTemp": 75.9,
-        "highTemp": 97.3,
-        "lowTemp": 49.5,
-        "rainfall": 1.14
+        "63045": 52.6,
+        "65202": 49.2,
+        "42003": 49.5
       },
       "change": {
-        "avgTemp": 2.0,
-        "highTemp": 0.8,
-        "lowTemp": 10.5,
-        "rainfall": 3.23
+        "63045": 6.6,
+        "65202": 10.2,
+        "42003": 10.5
+      }
+    },
+    {
+      "metric": "Rainfall",
+      "unit": "in",
+      "current": {
+        "63045": 1.8,
+        "65202": 4.21,
+        "42003": 4.37
+      },
+      "previous": {
+        "63045": 1.45,
+        "65202": 0.13,
+        "42003": 1.14
+      },
+      "change": {
+        "63045": 0.35,
+        "65202": 4.08,
+        "42003": 3.23
       }
     }
-  }
+  ],
+  "locations": [
+    {
+      "zip": "63045",
+      "name": "Earth City",
+      "state": "MO"
+    },
+    {
+      "zip": "65202",
+      "name": "Columbia",
+      "state": "MO"
+    },
+    {
+      "zip": "42003",
+      "name": "Paducah",
+      "state": "KY"
+    }
+  ]
 }
