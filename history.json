@@ -1,13 +1,58 @@
 {
-  "generated": "2026-08-28",
-  "ytd": {
-    "currentYear": 2026,
-    "previousYear": 2025,
-    "locations": {}
-  },
-  "mtd": {
-    "currentLabel": "August 2026",
-    "previousLabel": "August 2025",
-    "locations": {}
+  "generated": "2026-08-31",
+  "month": "August",
+  "currentYear": 2026,
+  "previousYear": 2025,
+  "currentPeriod": "2026-08-01 through 2026-08-30",
+  "previousPeriod": "2025-08-01 through 2025-08-30",
+  "locations": {
+    "63045": {
+      "name": "Earth City",
+      "state": "MO",
+      "current": {
+        "avgTemp": 78.5,
+        "highTemp": 95.5,
+        "lowTemp": 59.2,
+        "rainfall": 1.8
+      },
+      "previous": {
+        "avgTemp": 76.8,
+        "highTemp": 96.6,
+        "lowTemp": 52.6,
+        "rainfall": 1.45
+      }
+    },
+    "65202": {
+      "name": "Columbia",
+      "state": "MO",
+      "current": {
+        "avgTemp": 76.7,
+        "highTemp": 94.9,
+        "lowTemp": 59.4,
+        "rainfall": 4.21
+      },
+      "previous": {
+        "avgTemp": 74.7,
+        "highTemp": 96.4,
+        "lowTemp": 49.2,
+        "rainfall": 0.1
+      }
+    },
+    "42003": {
+      "name": "Paducah",
+      "state": "KY",
+      "current": {
+        "avgTemp": 77.9,
+        "highTemp": 98.1,
+        "lowTemp": 60.0,
+        "rainfall": 4.37
+      },
+      "previous": {
+        "avgTemp": 75.9,
+        "highTemp": 97.3,
+        "lowTemp": 49.5,
+        "rainfall": 1.14
+      }
+    }
   }
 }
