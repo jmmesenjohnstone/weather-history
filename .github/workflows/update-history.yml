@@ -8,8 +8,7 @@ on:
   # 4:50 AM UTC = 11:50 PM Central during daylight saving
   # time.
   #
-  # The manual option remains available so the workflow
-  # can also be run from GitHub Actions whenever needed.
+  # Manual runs remain available from GitHub Actions.
   #
   schedule:
     - cron: "50 4 * * *"
@@ -87,13 +86,17 @@ jobs:
 
           current_year = yesterday.year
           previous_year = current_year - 1
-
           current_month = yesterday.month
 
           month_name = yesterday.strftime("%B")
 
+          completed_day = yesterday.day
 
-          # Current month
+
+          # -------------------------------------------------
+          # Current-year period
+          # -------------------------------------------------
+
           current_start = date(
               current_year,
               current_month,
@@ -103,22 +106,68 @@ jobs:
           current_end = yesterday
 
 
-          # Same month last year
+          # -------------------------------------------------
+          # Previous-year period
+          # -------------------------------------------------
+          #
+          # Use the same calendar day number as the current
+          # completed period.
+          #
+          # Example:
+          #
+          # August 1-30, 2026
+          # compared with
+          # August 1-30, 2025
+          #
+          # If the current day number does not exist in the
+          # previous year/month, use the last valid day.
+          # -------------------------------------------------
+
           previous_start = date(
               previous_year,
               current_month,
               1
           )
 
+
+          # Find the last day of the previous-year month.
+          if current_month == 12:
+
+              next_month = date(
+                  previous_year + 1,
+                  1,
+                  1
+              )
+
+          else:
+
+              next_month = date(
+                  previous_year,
+                  current_month + 1,
+                  1
+              )
+
+
+          previous_month_last_day = (
+              next_month - timedelta(days=1)
+          ).day
+
+
+          previous_end_day = min(
+              completed_day,
+              previous_month_last_day
+          )
+
+
           previous_end = date(
               previous_year,
               current_month,
-              yesterday.day
+              previous_end_day
           )
 
 
           # =================================================
-          # VISUAL CROSSING API
+          # GET WEATHER FROM VISUAL CROSSING
           # =================================================
 
           def get_weather(
@@ -338,39 +387,14 @@ jobs:
 
 
           # =================================================
-          # CREATE OUTPUT
+          # COLLECT RESULTS
           # =================================================
 
-          output = {
-
-              "generated":
-                  str(today),
-
-              "month":
-                  month_name,
-
-              "currentYear":
-                  current_year,
-
-              "previousYear":
-                  previous_year,
-
-              "daysIncluded":
-                  yesterday.day,
-
-              "currentPeriod":
-                  f"{current_start} through {current_end}",
-
-              "previousPeriod":
-                  f"{previous_start} through {previous_end}",
-
-              "locations": {}
-
-          }
+          results = {}
 
 
           # =================================================
-          # PROCESS LOCATIONS
+          # PROCESS ALL LOCATIONS
           # =================================================
 
           for zip_code, location in LOCATIONS.items():
@@ -426,7 +450,7 @@ jobs:
 
 
               # ---------------------------------------------
-              # CALCULATE
+              # CALCULATE STATISTICS
               # ---------------------------------------------
 
               current_stats = calculate(
@@ -468,12 +492,10 @@ jobs:
 
 
               # ---------------------------------------------
-              # SAVE
+              # SAVE RESULTS
               # ---------------------------------------------
 
-              output["locations"][
-                  zip_code
-              ] = {
+              results[zip_code] = {
 
                   "name":
                       location["name"],
@@ -519,13 +541,237 @@ jobs:
           # SAFETY CHECK
           # =================================================
 
-          if len(output["locations"]) != len(LOCATIONS):
+          if len(results) != len(LOCATIONS):
 
               raise RuntimeError(
                   "Not all locations were successfully "
                   "processed. history.json will NOT be "
                   "overwritten."
               )
+
+
+          # =================================================
+          # CREATE PHOCAS-FRIENDLY OUTPUT
+          # =================================================
+
+          output = {
+
+              "generated":
+                  str(today),
+
+              "month":
+                  month_name,
+
+              "currentYear":
+                  current_year,
+
+              "previousYear":
+                  previous_year,
+
+              "daysIncluded":
+                  completed_day,
+
+              "currentPeriod":
+                  f"{current_start} through {current_end}",
+
+              "previousPeriod":
+                  f"{previous_start} through {previous_end}",
+
+              "weather": [
+
+                  {
+                      "metric":
+                          "Average Temperature",
+
+                      "unit":
+                          "°F",
+
+                      "current": {
+
+                          zip_code:
+                              results[zip_code]["current"][
+                                  "avgTemp"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      },
+
+                      "previous": {
+
+                          zip_code:
+                              results[zip_code]["previous"][
+                                  "avgTemp"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      },
+
+                      "change": {
+
+                          zip_code:
+                              results[zip_code]["change"][
+                                  "avgTemp"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      }
+
+                  },
+
+
+                  {
+                      "metric":
+                          "High Temperature",
+
+                      "unit":
+                          "°F",
+
+                      "current": {
+
+                          zip_code:
+                              results[zip_code]["current"][
+                                  "highTemp"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      },
+
+                      "previous": {
+
+                          zip_code:
+                              results[zip_code]["previous"][
+                                  "highTemp"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      },
+
+                      "change": {
+
+                          zip_code:
+                              results[zip_code]["change"][
+                                  "highTemp"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      }
+
+                  },
+
+
+                  {
+                      "metric":
+                          "Low Temperature",
+
+                      "unit":
+                          "°F",
+
+                      "current": {
+
+                          zip_code:
+                              results[zip_code]["current"][
+                                  "lowTemp"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      },
+
+                      "previous": {
+
+                          zip_code:
+                              results[zip_code]["previous"][
+                                  "lowTemp"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      },
+
+                      "change": {
+
+                          zip_code:
+                              results[zip_code]["change"][
+                                  "lowTemp"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      }
+
+                  },
+
+
+                  {
+                      "metric":
+                          "Rainfall",
+
+                      "unit":
+                          "in",
+
+                      "current": {
+
+                          zip_code:
+                              results[zip_code]["current"][
+                                  "rainfall"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      },
+
+                      "previous": {
+
+                          zip_code:
+                              results[zip_code]["previous"][
+                                  "rainfall"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      },
+
+                      "change": {
+
+                          zip_code:
+                              results[zip_code]["change"][
+                                  "rainfall"
+                              ]
+
+                          for zip_code in LOCATIONS
+
+                      }
+
+                  }
+
+              ],
+
+
+              "locations": [
+
+                  {
+                      "zip":
+                          zip_code,
+
+                      "name":
+                          LOCATIONS[zip_code]["name"],
+
+                      "state":
+                          LOCATIONS[zip_code]["state"]
+
+                  }
+
+                  for zip_code in LOCATIONS
+
+              ]
+
+          }
 
 
           # =================================================
@@ -543,6 +789,10 @@ jobs:
                   indent=2
               )
 
+
+          # =================================================
+          # FINAL STATUS
+          # =================================================
 
           print("")
           print(
@@ -566,13 +816,13 @@ jobs:
 
           print(
               f"Completed days included: "
-              f"{yesterday.day}",
+              f"{completed_day}",
               flush=True
           )
 
           print(
               f"Locations processed: "
-              f"{len(output['locations'])}",
+              f"{len(results)}",
               flush=True
           )
 
