@@ -36,7 +36,7 @@ jobs:
       # GENERATE MONTHLY WEATHER DATA
       # =====================================================
 
-      - name: Generate monthly weather
+      - name: Update weather data
         env:
           VC_API_KEY: ${{ secrets.VC_API_KEY }}
 
@@ -56,6 +56,8 @@ jobs:
 
           API_KEY = os.environ["VC_API_KEY"]
 
+          DAILY_FILE = "weather-daily.json"
+          HISTORY_FILE = "history.json"
 
           LOCATIONS = {
               "63045": {
@@ -93,9 +95,36 @@ jobs:
           completed_day = yesterday.day
 
 
-          # -------------------------------------------------
-          # Current-year period
-          # -------------------------------------------------
+          # =================================================
+          # HELPER: LAST DAY OF MONTH
+          # =================================================
+
+          def last_day_of_month(year, month):
+
+              if month == 12:
+
+                  next_month = date(
+                      year + 1,
+                      1,
+                      1
+                  )
+
+              else:
+
+                  next_month = date(
+                      year,
+                      month + 1,
+                      1
+                  )
+
+              return (
+                  next_month - timedelta(days=1)
+              ).day
+
+
+          # =================================================
+          # DETERMINE COMPARISON DATES
+          # =================================================
 
           current_start = date(
               current_year,
@@ -106,58 +135,19 @@ jobs:
           current_end = yesterday
 
 
-          # -------------------------------------------------
-          # Previous-year period
-          # -------------------------------------------------
-          #
-          # Use the same calendar day number as the current
-          # completed period.
-          #
-          # Example:
-          #
-          # August 1-30, 2026
-          # compared with
-          # August 1-30, 2025
-          #
-          # If the current day number does not exist in the
-          # previous year/month, use the last valid day.
-          # -------------------------------------------------
-
           previous_start = date(
               previous_year,
               current_month,
               1
           )
 
-
-          # Find the last day of the previous-year month.
-          if current_month == 12:
-
-              next_month = date(
-                  previous_year + 1,
-                  1,
-                  1
-              )
-
-          else:
-
-              next_month = date(
-                  previous_year,
-                  current_month + 1,
-                  1
-              )
-
-
-          previous_month_last_day = (
-              next_month - timedelta(days=1)
-          ).day
-
-
           previous_end_day = min(
               completed_day,
-              previous_month_last_day
+              last_day_of_month(
+                  previous_year,
+                  current_month
+              )
           )
-
 
           previous_end = date(
               previous_year,
@@ -167,14 +157,70 @@ jobs:
 
 
           # =================================================
-          # GET WEATHER FROM VISUAL CROSSING
+          # LOAD DAILY CACHE
           # =================================================
+
+          if os.path.exists(DAILY_FILE):
+
+              with open(
+                  DAILY_FILE,
+                  "r"
+              ) as file:
+
+                  daily_data = json.load(file)
+
+          else:
+
+              daily_data = {
+                  "locations": {}
+              }
+
+
+          if "locations" not in daily_data:
+
+              daily_data["locations"] = {}
+
+
+          # =================================================
+          # ENSURE LOCATION STRUCTURE EXISTS
+          # =================================================
+
+          for zip_code in LOCATIONS:
+
+              if zip_code not in daily_data["locations"]:
+
+                  daily_data["locations"][zip_code] = {
+
+                      "name":
+                          LOCATIONS[zip_code]["name"],
+
+                      "state":
+                          LOCATIONS[zip_code]["state"],
+
+                      "days": {}
+
+                  }
+
+              elif "days" not in daily_data["locations"][zip_code]:
+
+                  daily_data["locations"][zip_code]["days"] = {}
+
+
+          # =================================================
+          # VISUAL CROSSING REQUEST
+          # =================================================
+
+          total_query_cost = 0
+
 
           def get_weather(
               zip_code,
               start_date,
               end_date
           ):
+
+              global total_query_cost
+
 
               url = (
                   "https://weather.visualcrossing.com/"
@@ -192,9 +238,19 @@ jobs:
               )
 
 
+              print("")
               print(
-                  f"Getting weather for {zip_code}: "
-                  f"{start_date} through {end_date}",
+                  f"Visual Crossing request:",
+                  flush=True
+              )
+
+              print(
+                  f"  Location: {zip_code}",
+                  flush=True
+              )
+
+              print(
+                  f"  Dates: {start_date} through {end_date}",
                   flush=True
               )
 
@@ -218,15 +274,6 @@ jobs:
                       data = json.loads(
                           response.read().decode()
                       )
-
-
-                      print(
-                          f"Request successful for {zip_code}.",
-                          flush=True
-                      )
-
-
-                      return data
 
 
               except urllib.error.HTTPError as error:
@@ -268,11 +315,6 @@ jobs:
                   )
 
                   print(
-                      "Visual Crossing response:",
-                      flush=True
-                  )
-
-                  print(
                       error_body,
                       flush=True
                   )
@@ -282,18 +324,37 @@ jobs:
                       flush=True
                   )
 
-
                   raise RuntimeError(
                       f"Visual Crossing request failed "
                       f"with HTTP {error.code}."
                   )
 
 
+              query_cost = data.get(
+                  "queryCost",
+                  0
+              )
+
+              total_query_cost += query_cost
+
+
+              print(
+                  f"  Query cost: {query_cost}",
+                  flush=True
+              )
+
+
+              return data
+
+
           # =================================================
-          # CALCULATE WEATHER STATISTICS
+          # STORE DAILY RECORDS
           # =================================================
 
-          def calculate(data):
+          def store_days(
+              zip_code,
+              data
+          ):
 
               days = data.get(
                   "days",
@@ -301,56 +362,286 @@ jobs:
               )
 
 
-              if not days:
+              for day in days:
 
-                  raise RuntimeError(
-                      "No weather data returned."
+                  weather_date = day.get(
+                      "datetime"
                   )
 
 
-              temperatures = [
+                  if not weather_date:
 
-                  d["temp"]
+                      continue
 
-                  for d in days
 
-                  if d.get("temp") is not None
+                  daily_data["locations"][
+                      zip_code
+                  ]["days"][weather_date] = {
 
+                      "temp":
+                          day.get("temp"),
+
+                      "tempmax":
+                          day.get("tempmax"),
+
+                      "tempmin":
+                          day.get("tempmin"),
+
+                      "precip":
+                          day.get("precip", 0) or 0
+
+                  }
+
+
+          # =================================================
+          # FIND MISSING DATES
+          # =================================================
+
+          def missing_dates(
+              zip_code,
+              start_date,
+              end_date
+          ):
+
+              existing = daily_data[
+                  "locations"
+              ][
+                  zip_code
+              ][
+                  "days"
               ]
 
 
-              highs = [
+              missing = []
 
-                  d["tempmax"]
-
-                  for d in days
-
-                  if d.get("tempmax") is not None
-
-              ]
+              current = start_date
 
 
-              lows = [
+              while current <= end_date:
 
-                  d["tempmin"]
-
-                  for d in days
-
-                  if d.get("tempmin") is not None
-
-              ]
+                  date_string = str(current)
 
 
-              rainfall = sum(
+                  if date_string not in existing:
 
-                  d.get(
-                      "precip",
-                      0
-                  ) or 0
+                      missing.append(current)
 
-                  for d in days
 
+                  current += timedelta(days=1)
+
+
+              return missing
+
+
+          # =================================================
+          # FETCH MISSING DATA
+          # =================================================
+          #
+          # We request missing dates in small batches.
+          #
+          # This keeps the initial bootstrap controlled and
+          # makes the workflow's API usage easy to monitor.
+          #
+          # After the cache is populated, normal nightly runs
+          # should only need the newest completed day.
+          # =================================================
+
+          BATCH_SIZE = 7
+
+
+          for zip_code, location in LOCATIONS.items():
+
+              print("")
+              print(
+                  "========================================",
+                  flush=True
               )
+
+              print(
+                  f"Checking {location['name']}, "
+                  f"{location['state']} "
+                  f"{zip_code}",
+                  flush=True
+              )
+
+              print(
+                  "========================================",
+                  flush=True
+              )
+
+
+              # ---------------------------------------------
+              # Current year missing dates
+              # ---------------------------------------------
+
+              current_missing = missing_dates(
+                  zip_code,
+                  current_start,
+                  current_end
+              )
+
+
+              # ---------------------------------------------
+              # Previous year missing dates
+              # ---------------------------------------------
+
+              previous_missing = missing_dates(
+                  zip_code,
+                  previous_start,
+                  previous_end
+              )
+
+
+              print(
+                  f"Missing current-year days: "
+                  f"{len(current_missing)}",
+                  flush=True
+              )
+
+              print(
+                  f"Missing previous-year days: "
+                  f"{len(previous_missing)}",
+                  flush=True
+              )
+
+
+              # ---------------------------------------------
+              # Process current-year missing dates
+              # ---------------------------------------------
+
+              for i in range(
+                  0,
+                  len(current_missing),
+                  BATCH_SIZE
+              ):
+
+                  batch = current_missing[
+                      i:i + BATCH_SIZE
+                  ]
+
+
+                  batch_start = batch[0]
+                  batch_end = batch[-1]
+
+
+                  data = get_weather(
+                      zip_code,
+                      batch_start,
+                      batch_end
+                  )
+
+
+                  store_days(
+                      zip_code,
+                      data
+                  )
+
+
+              # ---------------------------------------------
+              # Process previous-year missing dates
+              # ---------------------------------------------
+
+              for i in range(
+                  0,
+                  len(previous_missing),
+                  BATCH_SIZE
+              ):
+
+                  batch = previous_missing[
+                      i:i + BATCH_SIZE
+                  ]
+
+
+                  batch_start = batch[0]
+                  batch_end = batch[-1]
+
+
+                  data = get_weather(
+                      zip_code,
+                      batch_start,
+                      batch_end
+                  )
+
+
+                  store_days(
+                      zip_code,
+                      data
+                  )
+
+
+          # =================================================
+          # CALCULATE STATISTICS FROM CACHE
+          # =================================================
+
+          def calculate(
+              zip_code,
+              start_date,
+              end_date
+          ):
+
+              days = daily_data[
+                  "locations"
+              ][
+                  zip_code
+              ][
+                  "days"
+              ]
+
+
+              temperatures = []
+              highs = []
+              lows = []
+              rainfall = 0
+
+
+              current = start_date
+
+
+              while current <= end_date:
+
+                  date_string = str(current)
+
+
+                  if date_string not in days:
+
+                      raise RuntimeError(
+                          f"Missing cached weather data "
+                          f"for {zip_code} on "
+                          f"{date_string}."
+                      )
+
+
+                  day = days[date_string]
+
+
+                  if day.get("temp") is not None:
+
+                      temperatures.append(
+                          day["temp"]
+                      )
+
+
+                  if day.get("tempmax") is not None:
+
+                      highs.append(
+                          day["tempmax"]
+                      )
+
+
+                  if day.get("tempmin") is not None:
+
+                      lows.append(
+                          day["tempmin"]
+                      )
+
+
+                  rainfall += (
+                      day.get("precip", 0)
+                      or 0
+                  )
+
+
+                  current += timedelta(days=1)
 
 
               return {
@@ -387,113 +678,27 @@ jobs:
 
 
           # =================================================
-          # COLLECT RESULTS
+          # BUILD RESULTS
           # =================================================
 
           results = {}
 
 
-          # =================================================
-          # PROCESS ALL LOCATIONS
-          # =================================================
-
           for zip_code, location in LOCATIONS.items():
 
-              print("")
-              print(
-                  "========================================",
-                  flush=True
-              )
-
-              print(
-                  f"Processing "
-                  f"{location['name']}, "
-                  f"{location['state']} "
-                  f"{zip_code}",
-                  flush=True
-              )
-
-              print(
-                  "========================================",
-                  flush=True
-              )
-
-
-              # ---------------------------------------------
-              # CURRENT YEAR
-              # ---------------------------------------------
-
-              current_data = get_weather(
-
-                  zip_code,
-
-                  current_start,
-
-                  current_end
-
-              )
-
-
-              # ---------------------------------------------
-              # PREVIOUS YEAR
-              # ---------------------------------------------
-
-              previous_data = get_weather(
-
-                  zip_code,
-
-                  previous_start,
-
-                  previous_end
-
-              )
-
-
-              # ---------------------------------------------
-              # CALCULATE STATISTICS
-              # ---------------------------------------------
-
               current_stats = calculate(
-                  current_data
+                  zip_code,
+                  current_start,
+                  current_end
               )
+
 
               previous_stats = calculate(
-                  previous_data
+                  zip_code,
+                  previous_start,
+                  previous_end
               )
 
-
-              # ---------------------------------------------
-              # CALCULATE CHANGES
-              # ---------------------------------------------
-
-              avg_temp_change = round(
-                  current_stats["avgTemp"]
-                  - previous_stats["avgTemp"],
-                  1
-              )
-
-              high_temp_change = round(
-                  current_stats["highTemp"]
-                  - previous_stats["highTemp"],
-                  1
-              )
-
-              low_temp_change = round(
-                  current_stats["lowTemp"]
-                  - previous_stats["lowTemp"],
-                  1
-              )
-
-              rainfall_change = round(
-                  current_stats["rainfall"]
-                  - previous_stats["rainfall"],
-                  2
-              )
-
-
-              # ---------------------------------------------
-              # SAVE RESULTS
-              # ---------------------------------------------
 
               results[zip_code] = {
 
@@ -512,46 +717,40 @@ jobs:
                   "change": {
 
                       "avgTemp":
-                          avg_temp_change,
+                          round(
+                              current_stats["avgTemp"]
+                              - previous_stats["avgTemp"],
+                              1
+                          ),
 
                       "highTemp":
-                          high_temp_change,
+                          round(
+                              current_stats["highTemp"]
+                              - previous_stats["highTemp"],
+                              1
+                          ),
 
                       "lowTemp":
-                          low_temp_change,
+                          round(
+                              current_stats["lowTemp"]
+                              - previous_stats["lowTemp"],
+                              1
+                          ),
 
                       "rainfall":
-                          rainfall_change
+                          round(
+                              current_stats["rainfall"]
+                              - previous_stats["rainfall"],
+                              2
+                          )
 
                   }
 
               }
 
 
-              print("")
-              print(
-                  f"Successfully processed "
-                  f"{location['name']}, "
-                  f"{location['state']}.",
-                  flush=True
-              )
-
-
           # =================================================
-          # SAFETY CHECK
-          # =================================================
-
-          if len(results) != len(LOCATIONS):
-
-              raise RuntimeError(
-                  "Not all locations were successfully "
-                  "processed. history.json will NOT be "
-                  "overwritten."
-              )
-
-
-          # =================================================
-          # CREATE PHOCAS-FRIENDLY OUTPUT
+          # CREATE PHOCAS-FRIENDLY HISTORY.JSON
           # =================================================
 
           output = {
@@ -775,11 +974,27 @@ jobs:
 
 
           # =================================================
-          # WRITE HISTORY.JSON
+          # SAVE DAILY CACHE
           # =================================================
 
           with open(
-              "history.json",
+              DAILY_FILE,
+              "w"
+          ) as file:
+
+              json.dump(
+                  daily_data,
+                  file,
+                  indent=2
+              )
+
+
+          # =================================================
+          # SAVE PHOCAS HISTORY
+          # =================================================
+
+          with open(
+              HISTORY_FILE,
               "w"
           ) as file:
 
@@ -791,8 +1006,20 @@ jobs:
 
 
           # =================================================
-          # FINAL STATUS
+          # FINAL USAGE REPORT
           # =================================================
+
+          total_cached_records = sum(
+
+              len(
+                  location["days"]
+              )
+
+              for location
+              in daily_data["locations"].values()
+
+          )
+
 
           print("")
           print(
@@ -801,8 +1028,12 @@ jobs:
           )
 
           print(
-              "Monthly historical weather data "
-              "created successfully.",
+              "WEATHER UPDATE COMPLETE",
+              flush=True
+          )
+
+          print(
+              "========================================",
               flush=True
           )
 
@@ -815,14 +1046,20 @@ jobs:
           )
 
           print(
-              f"Completed days included: "
+              f"Completed days: "
               f"{completed_day}",
               flush=True
           )
 
           print(
-              f"Locations processed: "
-              f"{len(results)}",
+              f"Visual Crossing query cost this run: "
+              f"{total_query_cost}",
+              flush=True
+          )
+
+          print(
+              f"Cached daily records: "
+              f"{total_cached_records}",
               flush=True
           )
 
@@ -835,10 +1072,10 @@ jobs:
 
 
       # =====================================================
-      # COMMIT UPDATED HISTORY.JSON
+      # COMMIT UPDATED DATA
       # =====================================================
 
-      - name: Commit updated history
+      - name: Commit updated weather data
         run: |
 
           git config user.name \
@@ -847,7 +1084,9 @@ jobs:
           git config user.email \
             "actions@github.com"
 
-          git add history.json
+          git add \
+            history.json \
+            weather-daily.json
 
           git diff --cached --quiet || \
             git commit \
