@@ -1783,6 +1783,30 @@
       "tempmax": 81.2,
       "tempmin": 54.5,
       "precip": 0
+    },
+    "2026-09-27": {
+      "temp": 65.8,
+      "tempmax": 74.3,
+      "tempmin": 59.3,
+      "precip": 0.01
+    },
+    "2026-09-28": {
+      "temp": 68.7,
+      "tempmax": 79.7,
+      "tempmin": 60.8,
+      "precip": 0
+    },
+    "2025-09-27": {
+      "temp": 68.8,
+      "tempmax": 84.3,
+      "tempmin": 54.6,
+      "precip": 0
+    },
+    "2025-09-28": {
+      "temp": 71.2,
+      "tempmax": 88.2,
+      "tempmin": 56.0,
+      "precip": 0
     }
   },
   "65202": {
@@ -2468,6 +2492,30 @@
       "temp": 67.6,
       "tempmax": 81.7,
       "tempmin": 55.2,
+      "precip": 0
+    },
+    "2026-09-27": {
+      "temp": 66.2,
+      "tempmax": 72.9,
+      "tempmin": 60.4,
+      "precip": 0.01
+    },
+    "2026-09-28": {
+      "temp": 68.2,
+      "tempmax": 78.4,
+      "tempmin": 62.3,
+      "precip": 0
+    },
+    "2025-09-27": {
+      "temp": 69.3,
+      "tempmax": 83.6,
+      "tempmin": 55.6,
+      "precip": 0
+    },
+    "2025-09-28": {
+      "temp": 71.2,
+      "tempmax": 85.6,
+      "tempmin": 57.8,
       "precip": 0
     }
   },
@@ -3155,6 +3203,30 @@
       "tempmax": 80.9,
       "tempmin": 54.7,
       "precip": 0
+    },
+    "2026-09-27": {
+      "temp": 66.5,
+      "tempmax": 80.4,
+      "tempmin": 55.8,
+      "precip": 0
+    },
+    "2026-09-28": {
+      "temp": 64.8,
+      "tempmax": 82.3,
+      "tempmin": 48.6,
+      "precip": 0
+    },
+    "2025-09-27": {
+      "temp": 68.0,
+      "tempmax": 83.2,
+      "tempmin": 54.8,
+      "precip": 0
+    },
+    "2025-09-28": {
+      "temp": 69.5,
+      "tempmax": 85.8,
+      "tempmin": 54.7,
+      "precip": 0
     }
   },
   "62234": {
@@ -3840,6 +3912,30 @@
       "temp": 66.6,
       "tempmax": 81.3,
       "tempmin": 53.9,
+      "precip": 0
+    },
+    "2026-09-27": {
+      "temp": 65.1,
+      "tempmax": 74.6,
+      "tempmin": 57.4,
+      "precip": 0.011
+    },
+    "2026-09-28": {
+      "temp": 68.2,
+      "tempmax": 80.2,
+      "tempmin": 59.0,
+      "precip": 0
+    },
+    "2025-09-27": {
+      "temp": 67.9,
+      "tempmax": 85.4,
+      "tempmin": 52.9,
+      "precip": 0
+    },
+    "2025-09-28": {
+      "temp": 70.4,
+      "tempmax": 89.2,
+      "tempmin": 54.2,
       "precip": 0
     }
   }
