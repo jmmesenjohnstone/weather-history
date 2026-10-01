@@ -1,11 +1,11 @@
 {
-  "generated": "2026-09-30",
+  "generated": "2026-10-01",
   "month": "September",
   "currentYear": 2026,
   "previousYear": 2025,
-  "daysIncluded": 29,
-  "currentPeriod": "2026-09-01 through 2026-09-29",
-  "previousPeriod": "2025-09-01 through 2025-09-29",
+  "daysIncluded": 30,
+  "currentPeriod": "2026-09-01 through 2026-09-30",
+  "previousPeriod": "2025-09-01 through 2025-09-30",
   "weather": [
     {
       "metric": "Average Temperature",
@@ -13,18 +13,18 @@
       "current": {
         "63045": 77.3,
         "65202": 76.1,
-        "62234": 76.5,
+        "62234": 76.6,
         "42003": 77.3
       },
       "previous": {
         "63045": 71.8,
-        "65202": 70.8,
-        "62234": 71.0,
+        "65202": 70.9,
+        "62234": 71.1,
         "42003": 71.8
       },
       "change": {
         "63045": 5.5,
-        "65202": 5.3,
+        "65202": 5.2,
         "62234": 5.5,
         "42003": 5.5
       }
