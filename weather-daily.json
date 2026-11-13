@@ -2335,6 +2335,18 @@
       "tempmax": 59.6,
       "tempmin": 25.4,
       "precip": 0
+    },
+    "2026-11-12": {
+      "temp": 45.7,
+      "tempmax": 50.4,
+      "tempmin": 38.3,
+      "precip": 0
+    },
+    "2025-11-12": {
+      "temp": 49.1,
+      "tempmax": 66.2,
+      "tempmin": 35.0,
+      "precip": 0
     }
   },
   "65202": {
@@ -3572,6 +3584,18 @@
       "temp": 42.1,
       "tempmax": 60.3,
       "tempmin": 25.2,
+      "precip": 0
+    },
+    "2026-11-12": {
+      "temp": 44.2,
+      "tempmax": 51.5,
+      "tempmin": 35.7,
+      "precip": 0
+    },
+    "2025-11-12": {
+      "temp": 51.6,
+      "tempmax": 66.0,
+      "tempmin": 37.4,
       "precip": 0
     }
   },
@@ -4811,6 +4835,18 @@
       "tempmax": 51.9,
       "tempmin": 22.8,
       "precip": 0
+    },
+    "2026-11-12": {
+      "temp": 50.1,
+      "tempmax": 59.6,
+      "tempmin": 39.9,
+      "precip": 0
+    },
+    "2025-11-12": {
+      "temp": 51.6,
+      "tempmax": 66.2,
+      "tempmin": 40.1,
+      "precip": 0
     }
   },
   "62234": {
@@ -6048,6 +6084,18 @@
       "temp": 40.5,
       "tempmax": 58.3,
       "tempmin": 25.8,
+      "precip": 0
+    },
+    "2026-11-12": {
+      "temp": 46.0,
+      "tempmax": 50.9,
+      "tempmin": 37.9,
+      "precip": 0
+    },
+    "2025-11-12": {
+      "temp": 49.0,
+      "tempmax": 67.0,
+      "tempmin": 36.1,
       "precip": 0
     }
   }
